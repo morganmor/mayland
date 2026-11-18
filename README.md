@@ -6,6 +6,20 @@ Mayland brings OpenAI-compatible multi-provider control, live reasoning traces, 
 
 ---
 
+## Preview
+
+Captured at mobile iPhone viewport resolution (`390×844` @2x). Full captions and details in [docs/PREVIEW.md](docs/PREVIEW.md).
+
+| Home (Empty State) | Compact `+` Menu | Chat & Reasoning | Session Sidebar |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/preview/01-home.png" width="195" alt="Mayland Home Empty State" /> | <img src="docs/preview/02-plus-popover.png" width="195" alt="Mayland Plus Popover Menu" /> | <img src="docs/preview/03-chat-thoughts.png" width="195" alt="Mayland Chat and Thoughts" /> | <img src="docs/preview/04-sidebar.png" width="195" alt="Mayland Left Sidebar" /> |
+
+| Run Settings | Search Engine APIs | Bahasa Indonesia | Space Adventure Theme |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/preview/05-run-settings.png" width="195" alt="Mayland Run Settings" /> | <img src="docs/preview/06-search-engines.png" width="195" alt="Mayland Search Engine Settings" /> | <img src="docs/preview/07-settings-id.png" width="195" alt="Mayland Indonesian Language Settings" /> | <img src="docs/preview/08-space-adventure.png" width="195" alt="Mayland Space Adventure Theme" /> |
+
+---
+
 ## Features
 
 - **OpenAI-Compatible Multi-Provider Adapter**
@@ -31,6 +45,7 @@ Mayland brings OpenAI-compatible multi-provider control, live reasoning traces, 
 
 ## Documentation
 
+- [docs/PREVIEW.md](docs/PREVIEW.md) — Mobile UI gallery across English, Bahasa Indonesia, Search Engine settings, and themes.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Detailed system layering, cryptography boundaries, SSE streaming, tool-calling flow, and Android plugin architecture.
 - [DESIGN.md](DESIGN.md) — Visual design system, OKLCH surface hierarchy, and interaction craft.
 - [PRODUCT.md](PRODUCT.md) — Product positioning, UX principles, and mobile constraints.
@@ -50,16 +65,20 @@ Mayland brings OpenAI-compatible multi-provider control, live reasoning traces, 
 ```text
 Mayland/
 ├── android/               # Capacitor Android project + MaylandSecureVaultPlugin.java
+├── docs/                  # Mobile UI preview screenshots & gallery (docs/PREVIEW.md)
 ├── public/                # PWA manifest, service worker, favicon & mascot icons
 ├── src/
 │   ├── adapters/          # OpenAI-compatible client, search providers & web tools
 │   ├── components/        # Composer, drawers, modals, Maybot & Search UI
 │   ├── crypto/            # Local AES-256-GCM vaults (provider keys & search keys)
+│   ├── i18n/              # Bilingual English & Bahasa Indonesia localization
 │   ├── store/             # Local conversation/settings store & workspace sync
 │   ├── styles/            # Design tokens & global styling
 │   ├── types/             # TypeScript domain models
 │   └── utils/             # File attachments, token estimation & native bridge helpers
+├── ARCHITECTURE.md
 ├── DESIGN.md              # Visual design system guidelines
+├── LICENSE                # MIT License
 ├── PRODUCT.md             # Product architecture & principles
 ├── capacitor.config.ts    # Capacitor configuration (app.mayland.chat)
 ├── package.json
