@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <rect width="128" height="128" rx="34" fill="#13161C"/>
+  <path d="M18 100C22.5 95.5 25.5 102.5 29.5 99C32 96.8 34 97 36.2 96.4" stroke="#4CB4FF" stroke-width="4.2" stroke-linecap="round"/>
+  <path d="M68 54C76 43 93 42.5 102.5 51.5C110.5 59 113 71.5 108 82C105.5 87 102 90.5 97.5 92.5C95 97 89 98.5 84.5 95.2C81 99 74 98.6 70.8 93.8C65.8 94.6 60 92.2 58.8 87.8C57.8 83.8 60.5 80.5 65 80Z" fill="#1D222B" stroke="#EDF2F9" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M86 35.5L90 31Q97 30.5 97.2 37.5L93.2 42Z" fill="#323A47" stroke="#EDF2F9" stroke-width="3.6" stroke-linejoin="round"/>
+  <path d="M46 80.5L82.5 39.5L89.8 46L53.2 87Z" fill="#4CB4FF" stroke="#EDF2F9" stroke-width="3.6" stroke-linejoin="round"/>
+  <path d="M36.2 96.4L41 89L45.2 92.8Z" fill="#EDF2F9" stroke="#EDF2F9" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M82 49.5C76 43 67 44 60 52L50 63.5C47.5 66.5 47.2 70 49.5 71.8C51.8 73.6 55.2 72.5 57.6 69.5L66.5 59.5C70 55.8 74 55 78 57.2" fill="#1D222B" stroke="#EDF2F9" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M93.5 77.5C83.8 73.5 68 70.5 56 71.8C51.4 72.2 50.2 78.2 54.8 79.6C65.5 82.6 79 85.6 91.5 87.6" fill="#1D222B" stroke="#EDF2F9" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path transform="translate(27 88)" d="M0 -5.2C0.6 -1.2 1.2 -0.6 5.2 0C1.2 0.6 0.6 1.2 0 5.2C-0.6 1.2 -1.2 0.6 -5.2 0C-1.2 -0.6 -0.6 -1.2 0 -5.2Z" fill="#CBEBFF"/>
+</svg>

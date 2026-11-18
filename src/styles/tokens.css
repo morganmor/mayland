@@ -1,0 +1,210 @@
+/* Mayland Design Tokens — Rigel Star Blue & Celestial Workbench */
+
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-paper: oklch(14% 0.005 255);
+  --color-paper-2: oklch(18.5% 0.007 255);
+  --color-paper-3: oklch(23% 0.009 255);
+  --color-paper-4: oklch(28.5% 0.011 255);
+  --color-scrim: oklch(7% 0.005 255 / 0.74);
+  --color-rule: oklch(31% 0.012 255);
+  --color-rule-soft: oklch(25% 0.009 255);
+
+  --color-ink: oklch(94.5% 0.006 245);
+  --color-ink-2: oklch(78% 0.01 248);
+  --color-muted: oklch(61% 0.01 248);
+
+  --color-accent: oklch(74% 0.135 236);
+  --color-accent-hover: oklch(79% 0.12 232);
+  --color-accent-soft: oklch(25% 0.055 240);
+  --color-accent-ink: oklch(13% 0.015 248);
+
+  --color-thought: oklch(73% 0.12 268);
+  --color-thought-soft: oklch(23% 0.045 268);
+
+  --color-rigel-core: oklch(92% 0.06 218);
+  --color-rigel-halo: oklch(64% 0.16 248);
+
+  --color-success: oklch(74% 0.125 162);
+  --color-success-soft: oklch(23% 0.042 162);
+  --color-warn: oklch(80% 0.125 88);
+  --color-danger: oklch(67% 0.165 22);
+  --color-danger-soft: oklch(24% 0.06 22);
+
+  --color-focus: oklch(77% 0.13 234);
+  --shadow-float: 0 12px 32px oklch(4% 0.008 255 / 0.56), 0 2px 8px oklch(4% 0.008 255 / 0.36);
+  --shadow-pill: 0 6px 18px oklch(4% 0.008 255 / 0.44);
+}
+
+[data-theme='obsidian'] {
+  color-scheme: dark;
+
+  --color-paper: oklch(10% 0.003 255);
+  --color-paper-2: oklch(14.5% 0.005 255);
+  --color-paper-3: oklch(19% 0.007 255);
+  --color-paper-4: oklch(24.5% 0.009 255);
+  --color-scrim: oklch(5% 0.003 255 / 0.78);
+  --color-rule: oklch(28% 0.009 255);
+  --color-rule-soft: oklch(22% 0.007 255);
+
+  --color-ink: oklch(94.5% 0.005 245);
+  --color-ink-2: oklch(76% 0.009 248);
+  --color-muted: oklch(59% 0.009 248);
+
+  --color-accent: oklch(75% 0.14 235);
+  --color-accent-hover: oklch(80% 0.125 232);
+  --color-accent-soft: oklch(24% 0.058 238);
+  --color-accent-ink: oklch(12% 0.015 248);
+
+  --color-thought: oklch(74% 0.12 268);
+  --color-thought-soft: oklch(22% 0.045 268);
+
+  --color-rigel-core: oklch(93% 0.055 218);
+  --color-rigel-halo: oklch(65% 0.165 246);
+
+  --color-success: oklch(74% 0.125 162);
+  --color-success-soft: oklch(22% 0.045 162);
+  --color-warn: oklch(80% 0.125 88);
+  --color-danger: oklch(67% 0.165 22);
+  --color-danger-soft: oklch(23% 0.065 22);
+
+  --color-focus: oklch(78% 0.135 234);
+  --shadow-float: 0 14px 36px oklch(4% 0.008 255 / 0.6), 0 2px 10px oklch(4% 0.008 255 / 0.4);
+  --shadow-pill: 0 6px 20px oklch(4% 0.008 255 / 0.48);
+}
+
+[data-theme='space-adventure'] {
+  color-scheme: dark;
+
+  --color-paper: oklch(13% 0.032 262);
+  --color-paper-2: oklch(17.5% 0.038 260);
+  --color-paper-3: oklch(22.5% 0.044 258);
+  --color-paper-4: oklch(28.5% 0.048 256);
+  --color-scrim: oklch(6% 0.025 264 / 0.76);
+  --color-rule: oklch(33% 0.05 258);
+  --color-rule-soft: oklch(26% 0.042 258);
+
+  --color-ink: oklch(96% 0.012 232);
+  --color-ink-2: oklch(81% 0.026 244);
+  --color-muted: oklch(64% 0.03 250);
+
+  --color-accent: oklch(76% 0.145 232);
+  --color-accent-hover: oklch(82% 0.13 226);
+  --color-accent-soft: oklch(26% 0.078 238);
+  --color-accent-ink: oklch(12% 0.022 252);
+
+  --color-thought: oklch(75% 0.13 288);
+  --color-thought-soft: oklch(25% 0.058 288);
+
+  --color-rigel-core: oklch(94% 0.06 215);
+  --color-rigel-halo: oklch(66% 0.175 242);
+
+  --color-success: oklch(75% 0.13 166);
+  --color-success-soft: oklch(23% 0.05 166);
+  --color-warn: oklch(81% 0.13 88);
+  --color-danger: oklch(68% 0.17 20);
+  --color-danger-soft: oklch(24% 0.065 20);
+
+  --color-focus: oklch(80% 0.14 230);
+  --shadow-float: 0 14px 38px oklch(6% 0.035 264 / 0.62), 0 2px 10px oklch(6% 0.035 264 / 0.42);
+  --shadow-pill: 0 6px 20px oklch(6% 0.035 264 / 0.5);
+}
+
+[data-theme='space-night'] {
+  color-scheme: dark;
+
+  --color-paper: oklch(8.5% 0.008 265);
+  --color-paper-2: oklch(12% 0.01 265);
+  --color-paper-3: oklch(15.5% 0.012 265);
+  --color-paper-4: oklch(20% 0.014 265);
+  --color-scrim: oklch(4% 0.006 265 / 0.82);
+  --color-rule: oklch(23% 0.014 265);
+  --color-rule-soft: oklch(18% 0.01 265);
+
+  --color-ink: oklch(77% 0.014 252);
+  --color-ink-2: oklch(63% 0.016 255);
+  --color-muted: oklch(49% 0.014 258);
+
+  --color-accent: oklch(45% 0.095 250);
+  --color-accent-hover: oklch(51% 0.1 248);
+  --color-accent-soft: oklch(18% 0.034 252);
+  --color-accent-ink: oklch(93% 0.01 245);
+
+  --color-thought: oklch(60% 0.075 268);
+  --color-thought-soft: oklch(18% 0.026 268);
+
+  --color-rigel-core: oklch(74% 0.05 236);
+  --color-rigel-halo: oklch(45% 0.095 250);
+
+  --color-success: oklch(62% 0.08 164);
+  --color-success-soft: oklch(18% 0.025 164);
+  --color-warn: oklch(68% 0.08 84);
+  --color-danger: oklch(58% 0.11 22);
+  --color-danger-soft: oklch(19% 0.038 22);
+
+  --color-focus: oklch(58% 0.09 246);
+  --shadow-float: 0 12px 32px oklch(2% 0.004 265 / 0.65), 0 2px 8px oklch(2% 0.004 265 / 0.45);
+  --shadow-pill: 0 6px 18px oklch(2% 0.004 265 / 0.55);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  --color-paper: oklch(97.5% 0.005 248);
+  --color-paper-2: oklch(94.5% 0.007 248);
+  --color-paper-3: oklch(91% 0.01 248);
+  --color-paper-4: oklch(86.5% 0.012 248);
+  --color-scrim: oklch(20% 0.02 256 / 0.36);
+  --color-rule: oklch(84% 0.014 248);
+  --color-rule-soft: oklch(89% 0.01 248);
+
+  --color-ink: oklch(20% 0.02 258);
+  --color-ink-2: oklch(38% 0.018 258);
+  --color-muted: oklch(49% 0.015 255);
+
+  --color-accent: oklch(48% 0.165 250);
+  --color-accent-hover: oklch(43% 0.17 252);
+  --color-accent-soft: oklch(91% 0.038 242);
+  --color-accent-ink: oklch(98% 0.004 245);
+
+  --color-thought: oklch(50% 0.145 266);
+  --color-thought-soft: oklch(91% 0.036 266);
+
+  --color-rigel-core: oklch(44% 0.185 254);
+  --color-rigel-halo: oklch(60% 0.155 244);
+
+  --color-success: oklch(48% 0.13 160);
+  --color-success-soft: oklch(91% 0.04 160);
+  --color-warn: oklch(58% 0.14 78);
+  --color-danger: oklch(53% 0.17 22);
+  --color-danger-soft: oklch(92% 0.045 22);
+
+  --color-focus: oklch(50% 0.165 248);
+  --shadow-float: 0 12px 32px oklch(28% 0.025 252 / 0.12), 0 2px 8px oklch(28% 0.025 252 / 0.08);
+  --shadow-pill: 0 6px 18px oklch(28% 0.025 252 / 0.12);
+}
+
+:root {
+  --font-ui: 'Geist Variable', system-ui, -apple-system, sans-serif;
+  --font-reading: 'Spectral', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --dur-micro: 120ms;
+  --dur-short: 210ms;
+  --dur-long: 340ms;
+
+  --z-base: 1;
+  --z-rail: 15;
+  --z-sticky: 25;
+  --z-composer: 30;
+  --z-scrim: 45;
+  --z-drawer: 55;
+  --z-sheet: 65;
+  --z-toast: 80;
+}
