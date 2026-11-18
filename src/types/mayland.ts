@@ -5,6 +5,8 @@ export type ThemeMode =
   | 'space-night'
   | 'light';
 
+export type AppLanguage = 'en' | 'id';
+
 export type ProviderPresetId =
   | 'openrouter'
   | 'fireworks'

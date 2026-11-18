@@ -13,6 +13,7 @@ import {
 import { SEARCH_PROVIDERS, getSearchProviderSpec } from '../adapters/searchProviders';
 import { executeWebSearch } from '../adapters/webSearchTool';
 import type { SearchVaultInfo } from '../crypto/searchKeyStore';
+import { useI18n } from '../i18n';
 import type {
   SearchEngineConfig,
   SearchKeyMetadata,
@@ -51,6 +52,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
   onOpenSearchSheet,
   onNotify,
 }) => {
+  const { t } = useI18n();
   const [expandedId, setExpandedId] = useState<SearchProviderId | null>(
     config.activeProviderId
   );
@@ -74,7 +76,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
   const handleSave = async (providerId: SearchProviderId) => {
     const raw = (draftKeys[providerId] ?? '').trim();
     if (!raw) {
-      onNotify('Paste an API key first.', 'error');
+      onNotify(t.searchSettings.errPasteFirst, 'error');
       return;
     }
 
@@ -93,7 +95,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
       }
       triggerHaptic('medium');
     } catch (err) {
-      onNotify((err as Error).message || 'Failed to store API key securely.', 'error');
+      onNotify((err as Error).message || t.searchSettings.errSaveFailed, 'error');
     } finally {
       setSavingId(null);
     }
@@ -118,7 +120,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
           ...prev,
           [providerId]: {
             ok: true,
-            text: `Connected · ${res.results.length} results in ${res.elapsedMs}ms`,
+            text: t.searchSettings.testConnected(res.results.length, res.elapsedMs),
           },
         }));
       } else {
@@ -126,7 +128,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
           ...prev,
           [providerId]: {
             ok: false,
-            text: res.error || 'Connection test failed',
+            text: res.error || t.searchSettings.testFailed,
           },
         }));
       }
@@ -135,7 +137,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
         ...prev,
         [providerId]: {
           ok: false,
-          text: (err as Error).message || 'Connection test failed',
+          text: (err as Error).message || t.searchSettings.testFailed,
         },
       }));
     } finally {
@@ -147,21 +149,21 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
     try {
       const res = await onVerifyVault();
       triggerHaptic('light');
-      const hwLabel = res.hardwareBacked ? ' · Hardware-backed' : '';
+      const hwLabel = res.hardwareBacked ? ` · ${t.searchSettings.hwBackedSuffix}` : '';
       setVaultCheckNote(
-        `${res.passed ? 'PASS' : 'FAIL'} · ${res.algorithm}${hwLabel} · ${res.durationMs}ms`
+        `${res.passed ? t.common.pass : t.common.fail} · ${res.algorithm}${hwLabel} · ${res.durationMs}ms`
       );
     } catch (err) {
-      onNotify((err as Error).message || 'Vault verification failed.', 'error');
+      onNotify((err as Error).message || t.searchSettings.errVerifyFailed, 'error');
     }
   };
 
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <h3 className="drawer-title">Search Engine</h3>
+        <h3 className="drawer-title">{t.searchSettings.title}</h3>
         <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>
-          Monthly free search API providers. Paste an API key to enable live web search.
+          {t.searchSettings.subtitle}
         </span>
       </div>
 
@@ -189,21 +191,21 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
             <ShieldCheck size={16} style={{ color: 'var(--color-success)' }} />
             <span>
               {vaultInfo.backend === 'android-keystore'
-                ? 'Android Keystore Vault'
-                : 'Encrypted Local Vault'}
+                ? t.searchSettings.vaultAndroid
+                : t.searchSettings.vaultLocal}
             </span>
           </span>
           <span className="soft-badge" data-tone="success">
             {vaultInfo.hardwareBacked
-              ? 'Hardware AES-256-GCM'
-              : 'AES-256-GCM'}
+              ? t.searchSettings.hwBackedBadge
+              : t.searchSettings.aesBadge}
           </span>
         </div>
 
         <span style={{ fontSize: '0.76rem', color: 'var(--color-muted)', lineHeight: 1.45 }}>
           {vaultInfo.backend === 'android-keystore'
-            ? 'Search API keys are encrypted with a non-exportable AndroidKeyStore AES-256-GCM key inside app-private Android storage and excluded from cloud/file backups.'
-            : 'Search API keys are encrypted locally with WebCrypto AES-256-GCM before storage — never saved in plaintext.'}
+            ? t.searchSettings.vaultAndroidDesc
+            : t.searchSettings.vaultWebDesc}
         </span>
 
         <div
@@ -221,7 +223,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
               className="soft-badge"
               onClick={handleVerify}
             >
-              Verify encryption
+              {t.searchSettings.verifyEncryption}
             </button>
             {vaultCheckNote && (
               <span
@@ -239,7 +241,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
             className="tabular-nums"
             style={{ fontSize: '0.74rem', color: 'var(--color-muted)' }}
           >
-            {savedCount}/{SEARCH_PROVIDERS.length} keys saved
+            {t.searchSettings.keysSavedCount(savedCount, SEARCH_PROVIDERS.length)}
           </span>
         </div>
       </div>
@@ -265,18 +267,20 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
                 className="soft-badge"
                 data-tone={activeMeta ? 'success' : undefined}
               >
-                {activeMeta ? `Active · ${activeMeta.maskedPreview}` : 'Needs API key'}
+                {activeMeta
+                  ? t.searchSettings.activeBadgeWithPreview(activeMeta.maskedPreview)
+                  : t.searchSettings.needsApiKey}
               </span>
             </div>
             <span style={{ fontSize: '0.73rem', color: 'var(--color-muted)' }}>
-              {activeSpec.freeMonthlyQuota}
-              {activeSpec.noCardRequired ? ' · No card required' : ''}
+              {t.searchSettings.providerQuotas[activeSpec.id] ?? activeSpec.freeMonthlyQuota}
+              {activeSpec.noCardRequired ? t.searchSettings.noCardRequiredText : ''}
             </span>
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <div className="search-count-pills" role="group" aria-label="Results per search">
+          <div className="search-count-pills" role="group" aria-label={t.searchSettings.resultsPerSearchAria}>
             {RESULT_COUNT_OPTIONS.map((cnt) => (
               <button
                 key={cnt}
@@ -288,7 +292,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
                   onConfigChange({ ...config, maxResults: cnt });
                 }}
               >
-                {cnt} res
+                {cnt} {t.searchSettings.resSuffix}
               </button>
             ))}
           </div>
@@ -304,7 +308,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
               }}
             >
               <Search size={13} />
-              <span>Try Search</span>
+              <span>{t.searchSettings.trySearch}</span>
             </button>
           )}
         </div>
@@ -312,7 +316,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
 
       {/* Free Monthly Providers Directory */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <span className="drawer-label">Providers with Free Monthly Tiers</span>
+        <span className="drawer-label">{t.searchSettings.directoryLabel}</span>
         <div className="search-provider-list">
           {SEARCH_PROVIDERS.map((provider) => {
             const meta = keyMetadata[provider.id];
@@ -347,22 +351,26 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
                       <span className="search-provider-name">{provider.name}</span>
                       {isActive && (
                         <span className="soft-badge" data-tone="accent">
-                          Active
+                          {t.common.active}
                         </span>
                       )}
                       {meta && (
                         <span className="soft-badge" data-tone="success">
-                          Key saved
+                          {t.searchSettings.keySavedBadge}
                         </span>
                       )}
                     </div>
-                    <span className="search-provider-tagline">{provider.tagline}</span>
+                    <span className="search-provider-tagline">
+                      {t.searchSettings.providerTaglines[provider.id] ?? provider.tagline}
+                    </span>
                     <div className="search-provider-badges">
                       <span className="search-quota-pill">
-                        {provider.freeMonthlyQuota}
+                        {t.searchSettings.providerQuotas[provider.id] ?? provider.freeMonthlyQuota}
                       </span>
                       <span className="search-card-pill">
-                        {provider.noCardRequired ? 'No card' : 'Card verification'}
+                        {provider.noCardRequired
+                          ? t.searchSettings.noCardBadge
+                          : t.searchSettings.cardBadge}
                       </span>
                     </div>
                   </div>
@@ -406,7 +414,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
                         rel="noopener noreferrer"
                         className="search-get-key-link"
                       >
-                        <span>Get free API key</span>
+                        <span>{t.searchSettings.getFreeKey}</span>
                         <ExternalLink size={12} />
                       </a>
                     </div>
@@ -422,8 +430,11 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
                           value={draft}
                           placeholder={
                             meta
-                              ? 'Paste new API key to replace…'
-                              : `Enter ${provider.name} API key (${provider.keyPlaceholder})`
+                              ? t.searchSettings.pasteReplacePlaceholder
+                              : t.searchSettings.enterKeyPlaceholder(
+                                  provider.name,
+                                  provider.keyPlaceholder
+                                )
                           }
                           onChange={(e) =>
                             setDraftKeys((prev) => ({
@@ -446,7 +457,11 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
                         />
                         <button
                           type="button"
-                          aria-label={showSecret ? 'Hide API key' : 'Show API key'}
+                          aria-label={
+                            showSecret
+                              ? t.searchSettings.hideKeyAria
+                              : t.searchSettings.showKeyAria
+                          }
                           onClick={() =>
                             setVisibleKeys((prev) => ({
                               ...prev,
@@ -474,7 +489,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
                         style={{ minHeight: 40, padding: '0 14px', fontSize: '0.82rem' }}
                       >
                         <Check size={14} />
-                        <span>{isSaving ? 'Saving…' : 'Save Key'}</span>
+                        <span>{isSaving ? t.common.saving : t.searchSettings.saveKey}</span>
                       </button>
                     </div>
 
@@ -500,11 +515,11 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
                                   ...config,
                                   activeProviderId: provider.id,
                                 });
-                                onNotify(`Active search engine set to ${provider.name}`);
+                                onNotify(t.searchSettings.activeChangedToast(provider.name));
                               }}
                             >
                               <Check size={13} />
-                              <span>Set Active</span>
+                              <span>{t.searchSettings.setActive}</span>
                             </button>
                           )}
 
@@ -516,7 +531,9 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
                             onClick={() => void handleTest(provider.id)}
                           >
                             <FlaskConical size={13} />
-                            <span>{isTesting ? 'Testing…' : 'Test Search'}</span>
+                            <span>
+                              {isTesting ? t.searchSettings.testing : t.searchSettings.testSearch}
+                            </span>
                           </button>
                         </div>
 
@@ -530,7 +547,7 @@ export const SearchEngineSettingsPanel: React.FC<SearchEngineSettingsPanelProps>
                           }}
                         >
                           <Trash2 size={13} />
-                          <span>Remove</span>
+                          <span>{t.searchSettings.remove}</span>
                         </button>
                       </div>
                     )}

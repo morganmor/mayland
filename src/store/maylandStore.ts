@@ -2,6 +2,7 @@ import { createDefaultProfiles } from '../adapters/providerPresets';
 import { SEARCH_PROVIDER_MAP } from '../adapters/searchProviders';
 import { keyVault } from '../crypto/keyVault';
 import type {
+  AppLanguage,
   Conversation,
   ProviderProfile,
   RunSettings,
@@ -15,6 +16,7 @@ const PROFILES_KEY = 'mayland.profiles.v1';
 const CONVS_KEY = 'mayland.conversations.v1';
 const ACTIVE_CONV_KEY = 'mayland.active_conv.v1';
 const THEME_KEY = 'mayland.theme.v1';
+const LANGUAGE_KEY = 'mayland.language.v1';
 const PROSE_FONT_KEY = 'mayland.prose_font.v1';
 const SAVED_PROMPTS_KEY = 'mayland.saved_prompts.v1';
 const SEARCH_ENGINE_KEY = 'mayland.search_engine.v1';
@@ -205,6 +207,24 @@ export function loadTheme(): ThemeMode {
 export function saveTheme(theme: ThemeMode): void {
   try {
     localStorage.setItem(THEME_KEY, theme);
+  } catch {
+    // ignore
+  }
+}
+
+export function loadLanguage(): AppLanguage {
+  try {
+    const val = localStorage.getItem(LANGUAGE_KEY);
+    if (val === 'en' || val === 'id') return val;
+  } catch {
+    // ignore
+  }
+  return 'en';
+}
+
+export function saveLanguage(lang: AppLanguage): void {
+  try {
+    localStorage.setItem(LANGUAGE_KEY, lang);
   } catch {
     // ignore
   }

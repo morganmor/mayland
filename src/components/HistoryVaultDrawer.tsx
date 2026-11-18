@@ -8,6 +8,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { useI18n } from '../i18n';
 import type { Conversation, VaultStatus } from '../types/mayland';
 import { triggerHaptic } from '../utils/nativeBridge';
 import { MaylandLogo } from './MaylandLogo';
@@ -42,12 +43,6 @@ const RigelStarGlyph: React.FC<{ active?: boolean }> = ({ active = false }) => (
   </svg>
 );
 
-function getBucketLabel(ts: number, startOfToday: number, sevenDaysAgo: number): string {
-  if (ts >= startOfToday) return 'Today';
-  if (ts >= sevenDaysAgo) return 'Previous 7 days';
-  return 'Archive';
-}
-
 export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
   open,
   conversations,
@@ -60,6 +55,7 @@ export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
   onOpenVault,
   onOpenAppSettings,
 }) => {
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -83,17 +79,19 @@ export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
 
     const buckets = new Map<string, Conversation[]>();
     for (const conv of filtered) {
-      const label = getBucketLabel(
-        conv.updatedAt || conv.createdAt,
-        startOfToday,
-        sevenDaysAgo
-      );
+      const ts = conv.updatedAt || conv.createdAt;
+      const label =
+        ts >= startOfToday
+          ? t.history.today
+          : ts >= sevenDaysAgo
+            ? t.history.previous7Days
+            : t.history.archive;
       const list = buckets.get(label) ?? [];
       list.push(conv);
       buckets.set(label, list);
     }
     return Array.from(buckets.entries());
-  }, [filtered]);
+  }, [filtered, t]);
 
   useEffect(() => {
     if (!open) return;
@@ -117,7 +115,7 @@ export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
         className="drawer-panel rigel-drawer-panel"
         data-side="left"
         data-open={open ? 'true' : 'false'}
-        aria-label="Conversations and Observatory Navigation"
+        aria-label={t.history.drawerAria}
         aria-hidden={!open}
         inert={!open}
       >
@@ -125,12 +123,12 @@ export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
         <div className="rigel-drawer-header">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <MaylandLogo size={24} />
-            <span className="rigel-observatory-tag">Rigel Workbench</span>
+            <span className="rigel-observatory-tag">{t.history.observatoryTag}</span>
           </div>
           <button
             type="button"
             className="ghost-icon-btn"
-            aria-label="Close history"
+            aria-label={t.history.closeHistory}
             onClick={onClose}
           >
             <X size={19} />
@@ -152,7 +150,7 @@ export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
             <span className="rigel-new-star">
               <RigelStarGlyph active />
             </span>
-            <span style={{ fontWeight: 560, fontSize: '0.88rem' }}>New session</span>
+            <span style={{ fontWeight: 560, fontSize: '0.88rem' }}>{t.history.newSession}</span>
             <Plus size={16} style={{ marginLeft: 'auto', opacity: 0.85 }} />
           </motion.button>
 
@@ -165,7 +163,7 @@ export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
               className="rigel-search-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Filter sessions…"
+              placeholder={t.history.filterPlaceholder}
             />
             <span className="rigel-search-count tabular-nums">
               {filtered.length}
@@ -178,7 +176,7 @@ export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
           {grouped.length === 0 ? (
             <div className="rigel-empty-feed">
               <RigelStarGlyph />
-              <span>No matching sessions</span>
+              <span>{t.history.noMatchingSessions}</span>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -211,7 +209,7 @@ export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
                                 {conv.title}
                               </span>
                               <span className="rigel-session-meta tabular-nums">
-                                {conv.messages.length} msgs ·{' '}
+                                {t.history.msgCountLabel(conv.messages.length)} ·{' '}
                                 {conv.settings.model.split('/').pop()}
                               </span>
                             </div>
@@ -221,7 +219,7 @@ export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
                             <button
                               type="button"
                               className="rigel-session-del"
-                              aria-label={`Delete ${conv.title}`}
+                              aria-label={t.history.deleteConvAria(conv.title)}
                               onClick={() => {
                                 triggerHaptic('light');
                                 onDeleteConversation(conv.id);
@@ -253,7 +251,7 @@ export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
           >
             <span className="rigel-dock-left">
               <KeyRound size={15} style={{ color: 'var(--color-accent)' }} />
-              <span>API &amp; Providers</span>
+              <span>{t.history.apiAndProviders}</span>
             </span>
           </button>
 
@@ -268,7 +266,7 @@ export const HistoryVaultDrawer: React.FC<HistoryVaultDrawerProps> = ({
           >
             <span className="rigel-dock-left">
               <Settings size={15} style={{ color: 'var(--color-ink-2)' }} />
-              <span>Settings</span>
+              <span>{t.history.settings}</span>
             </span>
           </button>
         </div>

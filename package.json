@@ -2,8 +2,9 @@
   "name": "mayland",
   "private": true,
   "version": "1.0.0",
+  "license": "MIT",
   "type": "module",
-  "description": "Mayland — Mobile-first AI Chat Workbench with OpenAI-compatible custom endpoint adapter, AES-256-GCM local API key encryption, and Maybot chibi companion.",
+  "description": "Mayland — Mobile-first AI Chat Workbench with OpenAI-compatible custom endpoint adapter, encrypted API key storage (WebCrypto + AndroidKeyStore), multi-provider Web Search, and Maybot chibi companion.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

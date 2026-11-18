@@ -18,16 +18,19 @@ import { TopBar } from './components/TopBar';
 import { WebSearchSheet } from './components/WebSearchSheet';
 import { keyVault, KeyVaultError } from './crypto/keyVault';
 import { searchKeyStore, type SearchVaultInfo } from './crypto/searchKeyStore';
+import { getTranslations, I18nProvider } from './i18n';
 import {
   createDefaultSettings,
   createNewConversation,
   loadConversations,
+  loadLanguage,
   loadProfiles,
   loadProseFont,
   loadSavedPrompts,
   loadSearchEngineConfig,
   loadTheme,
   saveConversations,
+  saveLanguage,
   saveProfiles,
   saveProseFont,
   saveSavedPrompts,
@@ -51,6 +54,7 @@ import {
   type WorkspaceSyncState,
 } from './store/workspaceSync';
 import type {
+  AppLanguage,
   Attachment,
   ChatMessage,
   Conversation,
@@ -242,6 +246,8 @@ export function App() {
   const [activeConvId, setActiveConvId] = useState<string>(initialData.activeId);
 
   const [theme, setTheme] = useState<ThemeMode>(() => loadTheme());
+  const [language, setLanguage] = useState<AppLanguage>(() => loadLanguage());
+  const t = useMemo(() => getTranslations(language), [language]);
   const [proseFont, setProseFont] = useState<'editorial' | 'clean'>(() =>
     loadProseFont()
   );
@@ -398,6 +404,11 @@ export function App() {
   }, [theme]);
 
   useEffect(() => {
+    document.documentElement.lang = language;
+    saveLanguage(language);
+  }, [language]);
+
+  useEffect(() => {
     saveProseFont(proseFont);
   }, [proseFont]);
 
@@ -442,6 +453,10 @@ export function App() {
         if (remoteState.theme) {
           saveTheme(remoteState.theme);
           setTheme(remoteState.theme);
+        }
+        if (remoteState.language === 'en' || remoteState.language === 'id') {
+          saveLanguage(remoteState.language);
+          setLanguage(remoteState.language);
         }
         if (remoteState.proseFont === 'editorial' || remoteState.proseFont === 'clean') {
           saveProseFont(remoteState.proseFont);
@@ -531,6 +546,7 @@ export function App() {
               conversations,
               activeConvId: activeConv.id,
               theme,
+              language,
               proseFont,
               savedPrompts,
               searchEngineConfig: searchConfig,
@@ -555,6 +571,7 @@ export function App() {
               conversations,
               activeConvId: activeConv.id,
               theme,
+              language,
               proseFont,
               savedPrompts,
               searchEngineConfig: searchConfig,
@@ -621,6 +638,7 @@ export function App() {
         conversations,
         activeConvId: activeConv.id,
         theme,
+        language,
         proseFont,
         savedPrompts,
         searchEngineConfig: searchConfig,
@@ -641,7 +659,7 @@ export function App() {
     }, delay);
 
     return () => window.clearTimeout(timer);
-  }, [profiles, conversations, activeConv.id, activeConvId, theme, proseFont, savedPrompts, searchConfig, vaultVersion, phase]);
+  }, [profiles, conversations, activeConv.id, activeConvId, theme, language, proseFont, savedPrompts, searchConfig, vaultVersion, phase]);
 
   // Listen for updates from other browser tabs / Chrome profiles
   useEffect(() => {
@@ -714,8 +732,8 @@ export function App() {
         if (!res?.state) {
           pushToast(
             cleaned
-              ? `Could not pull from ${cleaned}`
-              : 'No saved workspace on PC disk yet',
+              ? t.toasts.syncPullErrRemote(cleaned)
+              : t.toasts.syncPullErrDisk,
             'error'
           );
           return;
@@ -728,13 +746,14 @@ export function App() {
           storePath: res.storePath ?? prev.storePath,
           lanUrls: res.lanUrls ?? prev.lanUrls,
         }));
-        pushToast(`Synced workspace (${res.state.profiles.length} providers)`);
+        pushToast(t.toasts.syncPullOk(res.state.profiles.length));
       } else {
         const snapshot = await buildCurrentWorkspaceSnapshot({
           profiles,
           conversations,
           activeConvId: activeConv.id,
           theme,
+          language,
           proseFont,
           savedPrompts,
           searchEngineConfig: searchConfig,
@@ -747,8 +766,8 @@ export function App() {
         if (!res.ok) {
           pushToast(
             cleaned
-              ? `Could not push to ${cleaned}`
-              : 'Could not reach PC workspace store',
+              ? t.toasts.syncPushErrRemote(cleaned)
+              : t.toasts.syncPushErrDisk,
             'error'
           );
           return;
@@ -759,10 +778,10 @@ export function App() {
           updatedAt: res.updatedAt ?? Date.now(),
           storePath: res.storePath ?? prev.storePath,
         }));
-        pushToast('Workspace synced');
+        pushToast(t.toasts.syncPushOk);
       }
     },
-    [activeConv.id, applySyncedWorkspace, conversations, profiles, proseFont, pushToast, savedPrompts, searchConfig, theme]
+    [activeConv.id, applySyncedWorkspace, conversations, language, profiles, proseFont, pushToast, savedPrompts, searchConfig, t, theme]
   );
 
   const handleExportBackup = useCallback(async () => {
@@ -771,6 +790,7 @@ export function App() {
       conversations,
       activeConvId: activeConv.id,
       theme,
+      language,
       proseFont,
       savedPrompts,
       searchEngineConfig: searchConfig,
@@ -786,8 +806,8 @@ export function App() {
     a.download = `mayland-sync-${stamp}.mayland.json`;
     a.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    pushToast('Exported portable workspace bundle');
-  }, [activeConv.id, conversations, profiles, proseFont, pushToast, savedPrompts, searchConfig, theme]);
+    pushToast(t.toasts.exportedBackup);
+  }, [activeConv.id, conversations, language, profiles, proseFont, pushToast, savedPrompts, searchConfig, t, theme]);
 
   const handleSaveSystemPrompt = useCallback(
     (name: string, content: string) => {
@@ -813,17 +833,17 @@ export function App() {
           ...prev,
         ];
       });
-      pushToast(`Saved prompt "${cleanedName}"`);
+      pushToast(t.toasts.savedPrompt(cleanedName));
     },
-    [pushToast]
+    [pushToast, t]
   );
 
   const handleDeleteSystemPrompt = useCallback(
     (id: string) => {
       setSavedPrompts((prev) => prev.filter((p) => p.id !== id));
-      pushToast('Deleted saved prompt');
+      pushToast(t.toasts.deletedSavedPrompt);
     },
-    [pushToast]
+    [pushToast, t]
   );
 
   const handleImportBackup = useCallback(
@@ -832,7 +852,7 @@ export function App() {
         const text = await file.text();
         const parsed = JSON.parse(text) as WorkspaceSyncState;
         if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.profiles)) {
-          throw new Error('Invalid Mayland backup format.');
+          throw new Error(t.toasts.invalidBackupFormat);
         }
         await applySyncedWorkspace(parsed);
         const res = await pushWorkspaceToTarget(parsed);
@@ -844,12 +864,14 @@ export function App() {
             updatedAt: res.updatedAt ?? Date.now(),
           }));
         }
-        pushToast(`Imported ${parsed.profiles.length} providers & ${parsed.conversations.length} chats`);
+        pushToast(
+          t.toasts.importedBackup(parsed.profiles.length, parsed.conversations.length)
+        );
       } catch (err) {
-        pushToast((err as Error).message || 'Failed to import backup', 'error');
+        pushToast((err as Error).message || t.toasts.importBackupFailed, 'error');
       }
     },
-    [applySyncedWorkspace, pushToast]
+    [applySyncedWorkspace, pushToast, t]
   );
 
   useEffect(() => {
@@ -939,8 +961,8 @@ export function App() {
       if (activeConvId === id) {
         setActiveConvId(remaining[0].id);
       }
-      pushToast(`Deleted "${target.title}"`, 'info', {
-        label: 'Undo',
+      pushToast(t.toasts.deletedConv(target.title), 'info', {
+        label: t.toasts.undo,
         run: () => {
           setConversations((cur) => {
             if (cur.some((item) => item.id === target.id)) return cur;
@@ -952,7 +974,7 @@ export function App() {
         },
       });
     },
-    [activeConvId, conversations, pushToast]
+    [activeConvId, conversations, pushToast, t]
   );
 
   const dispatchChat = useCallback(
@@ -1100,7 +1122,7 @@ export function App() {
       if (activeProfile.requiresApiKey && !hasActiveKey) {
         triggerHaptic('medium');
         setVaultOpen(true);
-        pushToast(`Add an API key for ${activeProfile.name} first.`);
+        pushToast(t.toasts.apiKeyRequiredAction(activeProfile.name), 'error');
         return;
       }
 
@@ -1152,6 +1174,7 @@ export function App() {
       hasActiveKey,
       prompt,
       pushToast,
+      t,
       updateActiveConversation,
     ]
   );
@@ -1189,9 +1212,9 @@ export function App() {
         ),
         updatedAt: Date.now(),
       }));
-      pushToast('Updated message');
+      pushToast(t.toasts.updatedMessage);
     },
-    [pushToast, updateActiveConversation]
+    [pushToast, t, updateActiveConversation]
   );
 
   const handleDeleteMessage = useCallback(
@@ -1210,8 +1233,8 @@ export function App() {
         updatedAt: Date.now(),
       }));
 
-      pushToast('Deleted message', 'info', {
-        label: 'Undo',
+      pushToast(t.toasts.deletedMessage, 'info', {
+        label: t.toasts.undo,
         run: () => {
           setConversations((cur) =>
             cur.map((c) =>
@@ -1223,7 +1246,7 @@ export function App() {
         },
       });
     },
-    [activeConv.id, activeConv.messages, pushToast, updateActiveConversation]
+    [activeConv.id, activeConv.messages, pushToast, t, updateActiveConversation]
   );
 
   const handleDeleteThinking = useCallback(
@@ -1248,8 +1271,8 @@ export function App() {
         updatedAt: Date.now(),
       }));
 
-      pushToast('Deleted reasoning trace', 'info', {
-        label: 'Undo',
+      pushToast(t.toasts.deletedReasoning, 'info', {
+        label: t.toasts.undo,
         run: () => {
           setConversations((cur) =>
             cur.map((c) =>
@@ -1273,7 +1296,7 @@ export function App() {
         },
       });
     },
-    [activeConv.id, activeConv.messages, handleDeleteMessage, pushToast, updateActiveConversation]
+    [activeConv.id, activeConv.messages, handleDeleteMessage, pushToast, t, updateActiveConversation]
   );
 
   const handleBranchMessage = useCallback(
@@ -1289,10 +1312,10 @@ export function App() {
         attachments: m.attachments ? [...m.attachments] : undefined,
       }));
 
-      const baseTitle = activeConv.title.replace(/\s+\(Branch(?:\s+\d+)?\)$/, '');
+      const baseTitle = activeConv.title.replace(/\s+\((?:Branch|Cabang)(?:\s+\d+)?\)$/, '');
       const branchedConv: Conversation = {
         id: `conv-${stamp.toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
-        title: `${baseTitle} (Branch)`,
+        title: `${baseTitle} (${t.toasts.branchSuffix})`,
         messages: clonedMessages,
         settings: { ...activeConv.settings },
         createdAt: stamp,
@@ -1304,9 +1327,9 @@ export function App() {
       setLiveTokPerSec(undefined);
       setConversations((prev) => [branchedConv, ...prev]);
       setActiveConvId(branchedConv.id);
-      pushToast('Branched conversation from output');
+      pushToast(t.toasts.branchedConversation);
     },
-    [activeConv.messages, activeConv.settings, activeConv.title, pushToast]
+    [activeConv.messages, activeConv.settings, activeConv.title, pushToast, t]
   );
 
   const handleSaveProfile = useCallback(
@@ -1358,10 +1381,10 @@ export function App() {
       refreshVault();
       const spec = getSearchProviderSpec(providerId);
       const storageLabel =
-        meta.backend === 'android-keystore' ? 'Android Keystore' : 'local vault';
-      pushToast(`Saved ${spec.name} key securely in ${storageLabel}`);
+        meta.backend === 'android-keystore' ? t.toasts.storageAndroid : t.toasts.storageLocal;
+      pushToast(t.toasts.savedSearchKey(spec.name, storageLabel));
     },
-    [pushToast, refreshSearchVault, refreshVault]
+    [pushToast, refreshSearchVault, refreshVault, t]
   );
 
   const handleDeleteSearchKey = useCallback(
@@ -1370,9 +1393,9 @@ export function App() {
       await refreshSearchVault();
       refreshVault();
       const spec = getSearchProviderSpec(providerId);
-      pushToast(`Removed ${spec.name} API key`);
+      pushToast(t.toasts.removedSearchKey(spec.name));
     },
-    [pushToast, refreshSearchVault, refreshVault]
+    [pushToast, refreshSearchVault, refreshVault, t]
   );
 
   const handleVerifySearchVault = useCallback(async () => {
@@ -1400,8 +1423,9 @@ export function App() {
           : 'idle';
 
   return (
-    <MotionConfig reducedMotion="user">
-      <div className="app-shell">
+    <I18nProvider language={language}>
+      <MotionConfig reducedMotion="user">
+        <div className="app-shell">
         <SpaceBackdrop
           theme={theme}
           dimmed={
@@ -1504,7 +1528,7 @@ export function App() {
           onToggleWebSearch={() => {
             if (!hasActiveSearchKey) {
               openAppSettings('search');
-              pushToast('Add a search engine API key in Settings first.');
+              pushToast(t.toasts.webSearchSettingsToast);
               return;
             }
             const nextEnabled = !(activeConv.settings.webSearchEnabled ?? true);
@@ -1512,8 +1536,8 @@ export function App() {
             const spec = getSearchProviderSpec(searchConfig.activeProviderId);
             pushToast(
               nextEnabled
-                ? `Web search (${spec.name}) enabled`
-                : 'Web search disabled for this chat'
+                ? t.toasts.webSearchEnabledToast(spec.name)
+                : t.toasts.webSearchDisabledToast
             );
           }}
           onOpenModelPicker={() => setModelPickerOpen(true)}
@@ -1575,6 +1599,7 @@ export function App() {
         <SettingsModal
           open={appSettingsOpen}
           initialSection={appSettingsSection}
+          language={language}
           theme={theme}
           proseFont={proseFont}
           syncInfo={syncInfo}
@@ -1585,6 +1610,10 @@ export function App() {
           searchKeyMetadata={searchKeyMetadata}
           searchVaultInfo={searchVaultInfo}
           onClose={() => setAppSettingsOpen(false)}
+          onLanguageChange={(next) => {
+            setLanguage(next);
+            pushToast(getTranslations(next).toasts.switchedLanguage);
+          }}
           onThemeChange={setTheme}
           onProseFontChange={setProseFont}
           onSyncAction={handleSyncRemote}
@@ -1647,9 +1676,9 @@ export function App() {
           onAttachResults={(attachment, queryText) => {
             setAttachments((prev) => [...prev, attachment]);
             if (!prompt.trim()) {
-              setPrompt(`Summarize & analyze these results for: ${queryText}`);
+              setPrompt(t.toasts.summarizeResultsPrompt(queryText));
             }
-            pushToast('Search results attached to prompt');
+            pushToast(t.toasts.searchResultsAttached);
           }}
           onAskAiWithResults={(promptText) => {
             void handleSend(promptText);
@@ -1684,8 +1713,9 @@ export function App() {
             ))}
           </AnimatePresence>
         </div>
-      </div>
-    </MotionConfig>
+        </div>
+      </MotionConfig>
+    </I18nProvider>
   );
 }
 

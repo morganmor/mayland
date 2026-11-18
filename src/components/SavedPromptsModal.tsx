@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Bookmark, Check, Save, Trash2, X } from 'lucide-react';
+import { useI18n } from '../i18n';
 import type { SavedSystemPrompt } from '../types/mayland';
 import { triggerHaptic } from '../utils/nativeBridge';
 
@@ -14,9 +15,9 @@ interface SavedPromptsModalProps {
   onDeletePrompt: (id: string) => void;
 }
 
-function formatSavedTimestamp(ts: number): string {
+function formatSavedTimestamp(ts: number, lang: 'en' | 'id'): string {
   try {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(lang === 'id' ? 'id-ID' : 'en-US', {
       dateStyle: 'short',
       timeStyle: 'medium',
     }).format(new Date(ts));
@@ -25,13 +26,13 @@ function formatSavedTimestamp(ts: number): string {
   }
 }
 
-function derivePromptTitle(content: string): string {
+function derivePromptTitle(content: string, fallbackTitle: string): string {
   const firstLine =
     content
       .split(/\r?\n/)
       .map((line) => line.replace(/^#+\s*/, '').trim())
       .find(Boolean) ?? '';
-  if (!firstLine) return 'Custom prompt';
+  if (!firstLine) return fallbackTitle;
   return firstLine.length > 36 ? `${firstLine.slice(0, 35).trim()}…` : firstLine;
 }
 
@@ -44,6 +45,7 @@ export const SavedPromptsModal: React.FC<SavedPromptsModalProps> = ({
   onApplyPrompt,
   onDeletePrompt,
 }) => {
+  const { language, t } = useI18n();
   const [nameDraft, setNameDraft] = useState('');
 
   useEffect(() => {
@@ -64,7 +66,8 @@ export const SavedPromptsModal: React.FC<SavedPromptsModalProps> = ({
   const handleSave = () => {
     if (!canSave) return;
     triggerHaptic('light');
-    const title = nameDraft.trim() || derivePromptTitle(currentInstructions);
+    const title =
+      nameDraft.trim() || derivePromptTitle(currentInstructions, t.savedPrompts.fallbackTitle);
     onSavePrompt(title, currentInstructions);
     setNameDraft('');
   };
@@ -83,7 +86,7 @@ export const SavedPromptsModal: React.FC<SavedPromptsModalProps> = ({
           <div className="center-modal-wrap">
             <motion.section
               className="center-modal saved-prompts-modal"
-              aria-label="Saved system prompts"
+              aria-label={t.savedPrompts.ariaLabel}
               initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -91,15 +94,15 @@ export const SavedPromptsModal: React.FC<SavedPromptsModalProps> = ({
             >
               <div className="provider-header">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <h2 className="drawer-title">Saved system prompts</h2>
+                  <h2 className="drawer-title">{t.savedPrompts.title}</h2>
                   <span style={{ fontSize: '0.76rem', color: 'var(--color-muted)' }}>
-                    Synced locally. Apply a preset to the active conversation, or delete it.
+                    {t.savedPrompts.subtitle}
                   </span>
                 </div>
                 <button
                   type="button"
                   className="ghost-icon-btn"
-                  aria-label="Close saved system prompts"
+                  aria-label={t.savedPrompts.closeAria}
                   onClick={onClose}
                 >
                   <X size={20} />
@@ -115,8 +118,8 @@ export const SavedPromptsModal: React.FC<SavedPromptsModalProps> = ({
                     className="drawer-field"
                     placeholder={
                       canSave
-                        ? 'Name for the current prompt (optional)'
-                        : 'Write system instructions first to save…'
+                        ? t.savedPrompts.namePlaceholder
+                        : t.savedPrompts.writeFirstPlaceholder
                     }
                     value={nameDraft}
                     disabled={!canSave}
@@ -136,7 +139,7 @@ export const SavedPromptsModal: React.FC<SavedPromptsModalProps> = ({
                     onClick={handleSave}
                   >
                     <Save size={15} />
-                    <span>Save</span>
+                    <span>{t.savedPrompts.save}</span>
                   </button>
                 </div>
 
@@ -145,10 +148,10 @@ export const SavedPromptsModal: React.FC<SavedPromptsModalProps> = ({
                     <div className="saved-prompts-empty">
                       <Bookmark size={22} style={{ color: 'var(--color-accent)', opacity: 0.85 }} />
                       <span style={{ fontWeight: 560, color: 'var(--color-ink-2)' }}>
-                        No saved system prompts yet
+                        {t.savedPrompts.emptyTitle}
                       </span>
                       <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>
-                        Enter system instructions in Run settings, then save reusable prompts here.
+                        {t.savedPrompts.emptyDesc}
                       </span>
                     </div>
                   ) : (
@@ -164,7 +167,7 @@ export const SavedPromptsModal: React.FC<SavedPromptsModalProps> = ({
                             <div className="saved-prompt-title">{item.name}</div>
                             <p className="saved-prompt-preview">{item.content}</p>
                             <span className="saved-prompt-meta tabular-nums">
-                              {formatSavedTimestamp(item.updatedAt)}
+                              {formatSavedTimestamp(item.updatedAt, language)}
                             </span>
                           </div>
 
@@ -180,13 +183,13 @@ export const SavedPromptsModal: React.FC<SavedPromptsModalProps> = ({
                               }}
                             >
                               {isActive && <Check size={14} />}
-                              <span>{isActive ? 'Applied' : 'Apply'}</span>
+                              <span>{isActive ? t.savedPrompts.applied : t.savedPrompts.apply}</span>
                             </button>
                             <button
                               type="button"
                               className="saved-prompt-del-btn"
-                              aria-label={`Delete saved prompt ${item.name}`}
-                              title="Delete"
+                              aria-label={t.savedPrompts.deleteAria(item.name)}
+                              title={t.common.delete}
                               onClick={() => {
                                 triggerHaptic('medium');
                                 onDeletePrompt(item.id);

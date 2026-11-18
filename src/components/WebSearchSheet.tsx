@@ -14,6 +14,7 @@ import {
   executeWebSearch,
   formatSearchResultsForPrompt,
 } from '../adapters/webSearchTool';
+import { useI18n } from '../i18n';
 import type {
   Attachment,
   SearchEngineConfig,
@@ -53,6 +54,7 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
   onAttachResults,
   onAskAiWithResults,
 }) => {
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [result, setResult] = useState<WebSearchResult | null>(null);
@@ -110,7 +112,7 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
           query: cleaned,
           results: [],
           elapsedMs: 1,
-          error: (err as Error).message || 'Search failed.',
+          error: (err as Error).message || t.searchSheet.searchFailed,
         });
       }
     } finally {
@@ -137,7 +139,7 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
   const handleSendToAi = () => {
     if (!result || !result.ok) return;
     const formatted = formatSearchResultsForPrompt(result);
-    const promptText = `Based on these live ${result.providerName} search results, answer the query: "${result.query}"\n\n${formatted}`;
+    const promptText = t.searchSheet.askAiPrompt(result.providerName, result.query, formatted);
     triggerHaptic('medium');
     onClose();
     onAskAiWithResults(promptText);
@@ -157,7 +159,7 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
           <div className="center-modal-wrap">
             <motion.section
               className="center-modal web-search-modal"
-              aria-label="Web Search Engine"
+              aria-label={t.searchSheet.ariaLabel}
               initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -167,9 +169,10 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                   <SearchProviderLogo providerId={activeSpec.id} size={30} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
-                    <h2 className="drawer-title">Web Search</h2>
+                    <h2 className="drawer-title">{t.searchSheet.title}</h2>
                     <span style={{ fontSize: '0.73rem', color: 'var(--color-muted)' }}>
-                      {activeSpec.name} · {activeHasKey ? 'Ready' : 'API key required'}
+                      {activeSpec.name} ·{' '}
+                      {activeHasKey ? t.searchSheet.ready : t.searchSheet.apiKeyRequired}
                     </span>
                   </div>
                 </div>
@@ -185,12 +188,12 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
                     }}
                   >
                     <Settings size={13} />
-                    <span>Providers</span>
+                    <span>{t.searchSheet.providers}</span>
                   </button>
                   <button
                     type="button"
                     className="ghost-icon-btn"
-                    aria-label="Close web search"
+                    aria-label={t.searchSheet.closeAria}
                     style={{ minWidth: 36, minHeight: 36 }}
                     onClick={onClose}
                   >
@@ -253,7 +256,7 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
                       name="webSearchQuery"
                       type="search"
                       className="drawer-field"
-                      placeholder={`Search the web with ${activeSpec.name}…`}
+                      placeholder={t.searchSheet.searchPlaceholder(activeSpec.name)}
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       style={{ paddingLeft: 36 }}
@@ -265,7 +268,7 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
                     disabled={searching || !query.trim() || !activeHasKey}
                     style={{ minHeight: 42, padding: '0 16px' }}
                   >
-                    <span>{searching ? 'Searching…' : 'Search'}</span>
+                    <span>{searching ? t.searchSheet.searching : t.searchSheet.search}</span>
                   </button>
                 </form>
 
@@ -274,10 +277,10 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
                   <div className="drawer-section-card" style={{ gap: 12 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <span style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--color-ink)' }}>
-                        Connect a Free Monthly Search API
+                        {t.searchSheet.emptyHeading}
                       </span>
                       <span style={{ fontSize: '0.8rem', color: 'var(--color-muted)', lineHeight: 1.5 }}>
-                        Add an API key for any supported provider in Settings → Search Engine. Your key is stored securely on-device.
+                        {t.searchSheet.emptyDesc}
                       </span>
                     </div>
 
@@ -314,7 +317,7 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
                         }}
                       >
                         <Settings size={14} />
-                        <span>Add Search API Key</span>
+                        <span>{t.searchSheet.addSearchApiKey}</span>
                       </button>
                     </div>
                   </div>
@@ -355,15 +358,18 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
                           }}
                         >
                           <span className="tabular-nums">
-                            {result.results.length} results from {result.providerName} ·{' '}
-                            {result.elapsedMs}ms
+                            {t.searchSheet.resultsSummary(
+                              result.results.length,
+                              result.providerName,
+                              result.elapsedMs
+                            )}
                           </span>
                         </div>
 
                         {result.answer && (
                           <div className="drawer-section-card" style={{ gap: 6 }}>
                             <span className="drawer-label" style={{ color: 'var(--color-accent)' }}>
-                              Quick Answer
+                              {t.searchSheet.quickAnswer}
                             </span>
                             <p
                               style={{
@@ -387,7 +393,7 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
                               color: 'var(--color-muted)',
                             }}
                           >
-                            No web results returned for "{result.query}".
+                            {t.searchSheet.noResults(result.query)}
                           </div>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -432,7 +438,7 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
                     onClick={handleAttachToComposer}
                   >
                     <Paperclip size={14} />
-                    <span>Attach to Prompt</span>
+                    <span>{t.searchSheet.attachToPrompt}</span>
                   </button>
 
                   <button
@@ -442,7 +448,7 @@ export const WebSearchSheet: React.FC<WebSearchSheetProps> = ({
                     onClick={handleSendToAi}
                   >
                     <Sparkles size={14} />
-                    <span>Ask AI with Results</span>
+                    <span>{t.searchSheet.askAiWithResults}</span>
                   </button>
                 </div>
               )}

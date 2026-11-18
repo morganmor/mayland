@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, Copy, X } from 'lucide-react';
 import { generateCodeSnippet } from '../adapters/openaiCompatible';
+import { useI18n } from '../i18n';
 import type { ChatMessage, ProviderProfile, RunSettings } from '../types/mayland';
 import { triggerHaptic } from '../utils/nativeBridge';
 
@@ -20,6 +21,7 @@ export const GetCodeSheet: React.FC<GetCodeSheetProps> = ({
   history,
   onClose,
 }) => {
+  const { t } = useI18n();
   const [tab, setTab] = useState<'curl' | 'fetch'>('curl');
   const [copied, setCopied] = useState(false);
 
@@ -50,18 +52,18 @@ export const GetCodeSheet: React.FC<GetCodeSheetProps> = ({
           <div className="center-modal-wrap">
             <motion.section
               className="center-modal"
-              aria-label="Get code snippet"
+              aria-label={t.getCode.ariaLabel}
               initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="drawer-header" style={{ paddingTop: 14 }}>
-                <h2 className="drawer-title">Get code</h2>
+                <h2 className="drawer-title">{t.getCode.title}</h2>
                 <button
                   type="button"
                   className="ghost-icon-btn"
-                  aria-label="Close Get code"
+                  aria-label={t.getCode.closeAria}
                   onClick={onClose}
                 >
                   <X size={20} />
@@ -94,13 +96,13 @@ export const GetCodeSheet: React.FC<GetCodeSheetProps> = ({
                   onClick={handleCopy}
                 >
                   {copied ? <Check size={15} style={{ color: 'var(--color-success)' }} /> : <Copy size={15} />}
-                  <span>{copied ? 'Copied' : 'Copy code'}</span>
+                  <span>{copied ? t.getCode.copied : t.getCode.copyCode}</span>
                 </button>
               </div>
 
               <div className="code-block-shell">
                 <div className="code-block-head">
-                  <span>OpenAI-Compatible · API key redacted</span>
+                  <span>{t.getCode.redactedNote}</span>
                 </div>
                 <pre className="code-block-pre">
                   <code>{code}</code>

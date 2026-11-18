@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
+import { useI18n } from '../i18n';
 import { triggerHaptic } from '../utils/nativeBridge';
 import { AsciiSpinner } from './AsciiSpinner';
 import { Maybot } from './Maybot';
@@ -16,6 +17,7 @@ export const ThoughtsAccordion: React.FC<ThoughtsAccordionProps> = ({
   isStreamingThinking = false,
   durationMs,
 }) => {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
   if (!thinking.trim() && !isStreamingThinking) return null;
@@ -42,17 +44,17 @@ export const ThoughtsAccordion: React.FC<ThoughtsAccordionProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
             <span className="thoughts-title">
               {isStreamingThinking
-                ? 'Thoughts · Thinking'
+                ? t.thoughts.thinkingTitle
                 : durationSec
-                  ? `Thoughts · ${durationSec}s`
-                  : 'Thoughts'}
+                  ? t.thoughts.thoughtsWithDuration(durationSec)
+                  : t.thoughts.thoughtsTitle}
             </span>
             {!open && (
               <span className="thoughts-sub">
                 {isStreamingThinking ? (
-                  <AsciiSpinner mode="glow" label="Streaming reasoning trace" />
+                  <AsciiSpinner mode="glow" label={t.thoughts.streamingTrace} />
                 ) : (
-                  'Expand to view model thoughts'
+                  t.thoughts.expandHint
                 )}
               </span>
             )}
@@ -78,7 +80,7 @@ export const ThoughtsAccordion: React.FC<ThoughtsAccordionProps> = ({
                 ) : null}
               </>
             ) : (
-              <AsciiSpinner mode="glow" label="Streaming reasoning trace" />
+              <AsciiSpinner mode="glow" label={t.thoughts.streamingTrace} />
             )}
           </div>
         </div>

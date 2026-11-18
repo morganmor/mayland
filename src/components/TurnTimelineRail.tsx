@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useI18n } from '../i18n';
 import type { ChatMessage } from '../types/mayland';
 import { triggerHaptic } from '../utils/nativeBridge';
 
@@ -147,6 +148,7 @@ export const TurnTimelineRail: React.FC<TurnTimelineRailProps> = ({
   activeId,
   onJumpToMessage,
 }) => {
+  const { t } = useI18n();
   const railRef = useRef<HTMLElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const dragStateRef = useRef<{
@@ -324,7 +326,7 @@ export const TurnTimelineRail: React.FC<TurnTimelineRailProps> = ({
       className="timeline-rail"
       data-interacting={isInteracting ? 'true' : 'false'}
       data-dense={total > 12 ? 'true' : 'false'}
-      aria-label="Conversation checkpoints"
+      aria-label={t.timeline.navAria}
       onPointerDown={handleTrackPointerDown}
       onPointerMove={handleTrackPointerMove}
       onPointerUp={finishScrub}
@@ -362,7 +364,11 @@ export const TurnTimelineRail: React.FC<TurnTimelineRailProps> = ({
               : 0.92 + Math.exp(-(slotDist * slotDist) / 2.2) * 0.25;
           const shiftX = isInteracting ? -(falloff * 10) : 0;
 
-          const tooltip = `Checkpoint #${cp.turnNumber}/${total}: ${summarizeCheckpoint(cp)}`;
+          const tooltip = t.timeline.checkpointTooltip(
+            cp.turnNumber,
+            total,
+            summarizeCheckpoint(cp)
+          );
 
           return (
             <button
@@ -381,7 +387,7 @@ export const TurnTimelineRail: React.FC<TurnTimelineRailProps> = ({
                 triggerHaptic('light');
                 onJumpToMessage(cp.id);
               }}
-              aria-label={`Jump to checkpoint #${cp.turnNumber}`}
+              aria-label={t.timeline.jumpToAria(cp.turnNumber)}
               title={tooltip}
             >
               <span

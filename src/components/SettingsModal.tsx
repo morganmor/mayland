@@ -4,15 +4,18 @@ import {
   Download,
   Globe,
   HardDrive,
+  Languages,
   Palette,
   RefreshCw,
   Upload,
   X,
 } from 'lucide-react';
+import { LANGUAGE_OPTIONS, useI18n } from '../i18n';
 import { THEME_OPTIONS } from '../store/maylandStore';
 import type { SyncStatusInfo } from '../store/workspaceSync';
 import type { SearchVaultInfo } from '../crypto/searchKeyStore';
 import type {
+  AppLanguage,
   SearchEngineConfig,
   SearchKeyMetadata,
   SearchProviderId,
@@ -26,6 +29,7 @@ export type SettingsSection = 'appearance' | 'search' | 'storage';
 interface SettingsModalProps {
   open: boolean;
   initialSection?: SettingsSection;
+  language: AppLanguage;
   theme: ThemeMode;
   proseFont: 'editorial' | 'clean';
   syncInfo: SyncStatusInfo;
@@ -36,6 +40,7 @@ interface SettingsModalProps {
   searchKeyMetadata: Partial<Record<SearchProviderId, SearchKeyMetadata>>;
   searchVaultInfo: SearchVaultInfo;
   onClose: () => void;
+  onLanguageChange: (next: AppLanguage) => void;
   onThemeChange: (next: ThemeMode) => void;
   onProseFontChange: (next: 'editorial' | 'clean') => void;
   onSyncAction: (remoteUrl: string, action: 'pull' | 'push') => Promise<void>;
@@ -54,17 +59,10 @@ interface SettingsModalProps {
   onNotify: (message: string, tone?: 'info' | 'error') => void;
 }
 
-const THEME_DESC: Record<ThemeMode, string> = {
-  dark: 'Balanced Rigel slate',
-  obsidian: 'Deep high-contrast black',
-  'space-adventure': 'Constellation starlight blue',
-  'space-night': 'Low-glare midnight calm',
-  light: 'Crisp studio daylight',
-};
-
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   open,
   initialSection = 'appearance',
+  language,
   theme,
   proseFont,
   syncInfo,
@@ -75,6 +73,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   searchKeyMetadata,
   searchVaultInfo,
   onClose,
+  onLanguageChange,
   onThemeChange,
   onProseFontChange,
   onSyncAction,
@@ -87,6 +86,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenSearchSheet,
   onNotify,
 }) => {
+  const { t } = useI18n();
   const [section, setSection] = useState<SettingsSection>(initialSection);
   const [remoteUrlInput, setRemoteUrlInput] = useState(syncInfo.remoteSyncUrl);
   const [syncBusy, setSyncBusy] = useState(false);
@@ -119,20 +119,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   }> = [
     {
       id: 'appearance',
-      label: 'Appearance',
-      hint: 'Theme & typography',
+      label: t.settings.tabs.appearance.label,
+      hint: t.settings.tabs.appearance.hint,
       icon: <Palette size={16} />,
     },
     {
       id: 'search',
-      label: 'Search Engine',
-      hint: 'Free APIs & secure keys',
+      label: t.settings.tabs.search.label,
+      hint: t.settings.tabs.search.hint,
       icon: <Globe size={16} />,
     },
     {
       id: 'storage',
-      label: 'Storage',
-      hint: 'Workspace & APK sync',
+      label: t.settings.tabs.storage.label,
+      hint: t.settings.tabs.storage.hint,
       icon: <HardDrive size={16} />,
     },
   ];
@@ -151,7 +151,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="center-modal-wrap">
             <motion.section
               className="center-modal settings-modal"
-              aria-label="Settings"
+              aria-label={t.settings.title}
               initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -160,15 +160,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {/* Header */}
               <div className="provider-header">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <h2 className="drawer-title">Settings</h2>
+                  <h2 className="drawer-title">{t.settings.title}</h2>
                   <span style={{ fontSize: '0.75rem', color: 'var(--color-muted)' }}>
-                    Workspace preferences &amp; persistence
+                    {t.settings.subtitle}
                   </span>
                 </div>
                 <button
                   type="button"
                   className="ghost-icon-btn"
-                  aria-label="Close settings"
+                  aria-label={t.settings.closeAria}
                   onClick={onClose}
                 >
                   <X size={20} />
@@ -178,7 +178,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               {/* Modular 2-Pane Body */}
               <div className="provider-workspace">
                 {/* Desktop Left Nav Rail */}
-                <aside className="provider-rail" aria-label="Settings navigation">
+                <aside className="provider-rail" aria-label={t.settings.navAria}>
                   <div className="provider-rail-scroll">
                     {navItems.map((item) => {
                       const active = section === item.id;
@@ -254,14 +254,75 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     {section === 'appearance' ? (
                       <>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          <h3 className="drawer-title">Appearance</h3>
+                          <h3 className="drawer-title">{t.settings.appearanceTitle}</h3>
                           <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>
-                            Customize Rigel celestial themes and reading font
+                            {t.settings.appearanceSubtitle}
                           </span>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                          <span className="drawer-label">Theme</span>
+                          <span
+                            className="drawer-label"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                          >
+                            <Languages size={13} style={{ color: 'var(--color-accent)' }} />
+                            <span>{t.settings.languageLabel}</span>
+                          </span>
+                          <div className="settings-font-grid">
+                            {LANGUAGE_OPTIONS.map((opt) => {
+                              const active = language === opt.id;
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  className="settings-font-card"
+                                  data-active={active ? 'true' : 'false'}
+                                  onClick={() => {
+                                    triggerHaptic('light');
+                                    onLanguageChange(opt.id);
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      gap: 8,
+                                      width: '100%',
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        fontSize: '0.95rem',
+                                        fontWeight: 600,
+                                        color: 'var(--color-ink)',
+                                      }}
+                                    >
+                                      {opt.label}
+                                    </span>
+                                    <span
+                                      className="soft-badge"
+                                      data-tone={active ? 'accent' : undefined}
+                                    >
+                                      {opt.code}
+                                    </span>
+                                  </div>
+                                  <span
+                                    style={{
+                                      fontSize: '0.77rem',
+                                      color: 'var(--color-muted)',
+                                    }}
+                                  >
+                                    {opt.desc}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          <span className="drawer-label">{t.settings.themeLabel}</span>
                           <div className="theme-grid">
                             {THEME_OPTIONS.map((item) => {
                               const active = theme === item.id;
@@ -287,9 +348,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                     />
                                   </span>
                                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
-                                    <span className="theme-card-label">{item.label}</span>
+                                    <span className="theme-card-label">
+                                      {t.topBar.themeNames[item.id] ?? item.label}
+                                    </span>
                                     <span style={{ fontSize: '0.68rem', color: 'var(--color-muted)', textAlign: 'left' }}>
-                                      {THEME_DESC[item.id]}
+                                      {t.settings.themeDesc[item.id]}
                                     </span>
                                   </div>
                                 </button>
@@ -299,7 +362,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                          <span className="drawer-label">Response font</span>
+                          <span className="drawer-label">{t.settings.responseFontLabel}</span>
                           <div className="settings-font-grid">
                             <button
                               type="button"
@@ -318,7 +381,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                   color: 'var(--color-ink)',
                                 }}
                               >
-                                Editorial Serif
+                                {t.settings.fontEditorialTitle}
                               </span>
                               <span
                                 style={{
@@ -327,7 +390,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                   color: 'var(--color-muted)',
                                 }}
                               >
-                                Warm high-legibility longform prose.
+                                {t.settings.fontEditorialDesc}
                               </span>
                             </button>
 
@@ -348,7 +411,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                   color: 'var(--color-ink)',
                                 }}
                               >
-                                Clean Sans
+                                {t.settings.fontCleanTitle}
                               </span>
                               <span
                                 style={{
@@ -357,7 +420,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                   color: 'var(--color-muted)',
                                 }}
                               >
-                                Crisp geometric UI typography.
+                                {t.settings.fontCleanDesc}
                               </span>
                             </button>
                           </div>
@@ -381,9 +444,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     ) : (
                       <>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          <h3 className="drawer-title">Storage</h3>
+                          <h3 className="drawer-title">{t.settings.storageTitle}</h3>
                           <span style={{ fontSize: '0.78rem', color: 'var(--color-muted)' }}>
-                            Synchronize providers, chats &amp; encrypted keys across browsers and Android APK
+                            {t.settings.storageSubtitle}
                           </span>
                         </div>
 
@@ -391,15 +454,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         <div className="settings-stat-grid">
                           <div className="settings-stat-card">
                             <span className="settings-stat-val tabular-nums">{providerCount}</span>
-                            <span className="settings-stat-lbl">Providers</span>
+                            <span className="settings-stat-lbl">{t.settings.statProviders}</span>
                           </div>
                           <div className="settings-stat-card">
                             <span className="settings-stat-val tabular-nums">{conversationCount}</span>
-                            <span className="settings-stat-lbl">Conversations</span>
+                            <span className="settings-stat-lbl">{t.settings.statConversations}</span>
                           </div>
                           <div className="settings-stat-card">
                             <span className="settings-stat-val tabular-nums">{savedKeyCount}</span>
-                            <span className="settings-stat-lbl">Vault Keys</span>
+                            <span className="settings-stat-lbl">{t.settings.statVaultKeys}</span>
                           </div>
                         </div>
 
@@ -424,17 +487,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               }}
                             >
                               <HardDrive size={15} style={{ color: 'var(--color-accent)' }} />
-                              <span>Workspace &amp; APK Sync</span>
+                              <span>{t.settings.syncCardTitle}</span>
                             </span>
                             <span
                               className="soft-badge"
                               data-tone={syncInfo.mode !== 'browser-only' ? 'accent' : undefined}
                             >
                               {syncInfo.mode === 'disk'
-                                ? `PC Disk · r${syncInfo.rev}`
+                                ? t.settings.syncBadgeDisk(syncInfo.rev)
                                 : syncInfo.mode === 'android-native'
-                                  ? 'Android File'
-                                  : 'Local Fallback'}
+                                  ? t.settings.syncBadgeAndroid
+                                  : t.settings.syncBadgeLocal}
                             </span>
                           </div>
 
@@ -447,14 +510,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           >
                             {syncInfo.mode === 'disk' ? (
                               <>
-                                Shared automatically across every desktop browser profile via{' '}
+                                {t.settings.syncDescDiskPrefix}{' '}
                                 <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink-2)' }}>
                                   {syncInfo.storePath || '~/.mayland/workspace-state.json'}
                                 </code>
                                 {syncInfo.lanUrls.length > 0 && (
                                   <>
                                     <br />
-                                    LAN Sync URL for Android APK:{' '}
+                                    {t.settings.syncDescLanPrefix}{' '}
                                     <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-accent)' }}>
                                       {syncInfo.lanUrls[0]}
                                     </code>
@@ -462,9 +525,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                 )}
                               </>
                             ) : syncInfo.mode === 'android-native' ? (
-                              'Persisted in native Android internal storage (filesDir). Enter your PC LAN URL below to pull/push over Wi-Fi, or import a .mayland.json backup.'
+                              t.settings.syncDescAndroid
                             ) : (
-                              'Running static offline mode. Export or import a .mayland.json bundle or connect to a PC Vite host URL.'
+                              t.settings.syncDescLocal
                             )}
                           </div>
 
@@ -472,7 +535,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             <input
                               type="url"
                               className="drawer-field"
-                              placeholder="PC LAN URL (e.g. http://192.168.101.5:5174)"
+                              placeholder={t.settings.lanUrlPlaceholder}
                               value={remoteUrlInput}
                               onChange={(e) => setRemoteUrlInput(e.target.value)}
                               style={{
@@ -503,7 +566,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               style={{ minHeight: 36, fontSize: '0.8rem' }}
                             >
                               <RefreshCw size={14} />
-                              <span>{syncInfo.mode === 'disk' ? 'Pull Disk' : 'Pull from PC'}</span>
+                              <span>{syncInfo.mode === 'disk' ? t.settings.pullDisk : t.settings.pullPc}</span>
                             </button>
 
                             <button
@@ -524,7 +587,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               style={{ minHeight: 36, fontSize: '0.8rem' }}
                             >
                               <Upload size={14} />
-                              <span>{syncInfo.mode === 'disk' ? 'Push Disk' : 'Push to PC'}</span>
+                              <span>{syncInfo.mode === 'disk' ? t.settings.pushDisk : t.settings.pushPc}</span>
                             </button>
 
                             <button
@@ -534,7 +597,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               style={{ minHeight: 36, fontSize: '0.8rem' }}
                             >
                               <Download size={14} />
-                              <span>Export (.mayland.json)</span>
+                              <span>{t.settings.exportBackup}</span>
                             </button>
 
                             <button
@@ -544,7 +607,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                               style={{ minHeight: 36, fontSize: '0.8rem' }}
                             >
                               <Upload size={14} />
-                              <span>Import</span>
+                              <span>{t.settings.importBackup}</span>
                             </button>
                           </div>
 

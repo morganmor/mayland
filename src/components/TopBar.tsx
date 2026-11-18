@@ -13,7 +13,7 @@ import {
   SlidersHorizontal,
   Trash2,
 } from 'lucide-react';
-import { THEME_OPTIONS } from '../store/maylandStore';
+import { useI18n } from '../i18n';
 import type { ProviderProfile, ThemeMode, VaultStatus } from '../types/mayland';
 import { formatTokenCount } from '../utils/tokenEstimator';
 import { triggerHaptic } from '../utils/nativeBridge';
@@ -55,6 +55,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onCycleTheme,
   onRenameChat,
 }) => {
+  const { t } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [draftTitle, setDraftTitle] = useState(title);
@@ -73,7 +74,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <motion.button
           type="button"
           className="tonal-circle-btn"
-          aria-label="Open chat history and key vault"
+          aria-label={t.topBar.openHistory}
           whileTap={{ scale: 0.9 }}
           onClick={() => {
             triggerHaptic('light');
@@ -96,7 +97,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               if (e.key === 'Enter') commitRename();
               if (e.key === 'Escape') setEditingTitle(false);
             }}
-            aria-label="Rename conversation"
+            aria-label={t.topBar.renameConversation}
             className="drawer-field"
             style={{ maxWidth: 220, padding: '6px 10px', fontSize: '0.95rem' }}
           />
@@ -108,7 +109,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               setDraftTitle(title);
               setEditingTitle(true);
             }}
-            aria-label="Rename conversation"
+            aria-label={t.topBar.renameConversation}
           >
             <span className="topbar-title-row">
               <MaylandLogo size={20} withWordmark={false} />
@@ -120,7 +121,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               />
             </span>
             <span className="topbar-subtitle tabular-nums">
-              <span>{formatTokenCount(tokenCount)} tokens</span>
+              <span>{t.topBar.tokensLabel(formatTokenCount(tokenCount))}</span>
               <span aria-hidden="true">·</span>
               <span
                 style={{
@@ -138,7 +139,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <motion.button
           type="button"
           className="ghost-icon-btn"
-          aria-label="New chat"
+          aria-label={t.topBar.newChat}
           whileTap={{ scale: 0.88, rotate: 90 }}
           onClick={() => {
             triggerHaptic('light');
@@ -152,7 +153,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <motion.button
             type="button"
             className="ghost-icon-btn"
-            aria-label="More options"
+            aria-label={t.topBar.moreOptions}
             aria-expanded={menuOpen}
             whileTap={{ scale: 0.9 }}
             onClick={() => {
@@ -206,7 +207,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     }}
                   >
                     <Search size={16} strokeWidth={1.8} />
-                    <span>Web Search</span>
+                    <span>{t.topBar.webSearch}</span>
                   </button>
                   <button
                     type="button"
@@ -223,7 +224,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     }}
                   >
                     <KeyRound size={16} strokeWidth={1.8} />
-                    <span>API & Providers</span>
+                    <span>{t.topBar.apiAndProviders}</span>
                   </button>
                   <button
                     type="button"
@@ -240,7 +241,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     }}
                   >
                     <Settings size={16} strokeWidth={1.8} />
-                    <span>Settings</span>
+                    <span>{t.topBar.settings}</span>
                   </button>
                   <button
                     type="button"
@@ -257,7 +258,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     }}
                   >
                     <Code2 size={16} strokeWidth={1.8} />
-                    <span>Get code</span>
+                    <span>{t.topBar.getCode}</span>
                   </button>
                   <button
                     type="button"
@@ -275,9 +276,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   >
                     <Palette size={16} strokeWidth={1.8} />
                     <span>
-                      Theme:{' '}
-                      {THEME_OPTIONS.find((item) => item.id === theme)?.label ??
-                        'Dark'}
+                      {t.topBar.themeLabel(t.topBar.themeNames[theme] ?? 'Dark')}
                     </span>
                   </button>
                   <button
@@ -296,7 +295,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     }}
                   >
                     <Trash2 size={16} strokeWidth={1.8} />
-                    <span>Clear conversation</span>
+                    <span>{t.topBar.clearConversation}</span>
                   </button>
                 </motion.div>
               </>
@@ -307,7 +306,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         <motion.button
           type="button"
           className="tonal-circle-btn"
-          aria-label="Open Run settings"
+          aria-label={t.topBar.openRunSettings}
           whileTap={{ scale: 0.9 }}
           onClick={() => {
             triggerHaptic('light');

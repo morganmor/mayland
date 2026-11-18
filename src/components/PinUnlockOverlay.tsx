@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Lock, Unlock } from 'lucide-react';
 import { keyVault } from '../crypto/keyVault';
+import { useI18n } from '../i18n';
 import { triggerHaptic } from '../utils/nativeBridge';
 import { Maybot } from './Maybot';
 
@@ -12,6 +13,7 @@ interface PinUnlockOverlayProps {
 export const PinUnlockOverlay: React.FC<PinUnlockOverlayProps> = ({
   onUnlocked,
 }) => {
+  const { t } = useI18n();
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
@@ -74,10 +76,10 @@ export const PinUnlockOverlay: React.FC<PinUnlockOverlayProps> = ({
               fontWeight: 600,
             }}
           >
-            Vault Locked
+            {t.pinOverlay.title}
           </h1>
           <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--color-muted)' }}>
-            Enter your PIN to unlock your saved API keys.
+            {t.pinOverlay.subtitle}
           </p>
         </div>
 
@@ -99,7 +101,7 @@ export const PinUnlockOverlay: React.FC<PinUnlockOverlayProps> = ({
             autoFocus
             value={pin}
             onChange={(e) => setPin(e.target.value)}
-            placeholder="Enter Master PIN…"
+            placeholder={t.pinOverlay.pinPlaceholder}
             className="drawer-field"
             style={{
               backgroundColor: 'var(--color-paper-2)',
@@ -123,7 +125,7 @@ export const PinUnlockOverlay: React.FC<PinUnlockOverlayProps> = ({
           whileTap={{ scale: 0.96 }}
         >
           <Unlock size={16} />
-          <span>{unlocking ? 'Decrypting…' : 'Unlock Vault'}</span>
+          <span>{unlocking ? t.pinOverlay.decrypting : t.pinOverlay.unlock}</span>
         </motion.button>
       </form>
     </motion.div>

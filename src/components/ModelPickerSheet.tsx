@@ -8,6 +8,7 @@ import {
   syncModelsDevCatalog,
 } from '../adapters/modelsDev';
 import { openAIAdapter } from '../adapters/openaiCompatible';
+import { useI18n } from '../i18n';
 import type {
   ProviderProfile,
   RunSettings,
@@ -37,6 +38,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
   onOpenVault,
   onNotify,
 }) => {
+  const { t } = useI18n();
   const activeProfile =
     profiles.find((p) => p.id === settings.profileId) ?? profiles[0];
   const [customModel, setCustomModel] = useState(settings.model);
@@ -68,7 +70,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
       const count = await syncModelsDevCatalog();
       setCatalogTick((t) => t + 1);
       triggerHaptic('light');
-      onNotify?.(`Synced ${count} model specs from models.dev`);
+      onNotify?.(t.modelPicker.syncedSpecs(count));
     } catch (err) {
       onNotify?.((err as Error).message, 'error');
     } finally {
@@ -78,14 +80,14 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
 
   const handleFetchFromEndpoint = async () => {
     if (!activeProfile?.baseUrl.trim()) {
-      onNotify?.('Configure a Base URL in API & Providers first.', 'error');
+      onNotify?.(t.modelPicker.errBaseUrlFirst, 'error');
       return;
     }
     setFetching(true);
     try {
       const fetched = await openAIAdapter.fetchModels(activeProfile);
       if (fetched.length === 0) {
-        onNotify?.('Endpoint returned 0 models.');
+        onNotify?.(t.modelPicker.zeroModels);
         return;
       }
       const nextDefault = activeProfile.defaultModel.trim() || fetched[0];
@@ -101,7 +103,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
         onSelectProfileAndModel(activeProfile.id, nextDefault);
       }
       triggerHaptic('light');
-      onNotify?.(`Fetched ${fetched.length} model${fetched.length === 1 ? '' : 's'}`);
+      onNotify?.(t.modelPicker.fetchedModels(fetched.length));
     } catch (err) {
       onNotify?.((err as Error).message, 'error');
     } finally {
@@ -157,18 +159,18 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
           <div className="center-modal-wrap">
             <motion.section
               className="center-modal"
-              aria-label="Model and Provider Picker"
+              aria-label={t.modelPicker.ariaLabel}
               initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="drawer-header" style={{ paddingTop: 14 }}>
-                <h2 className="drawer-title">Model & Provider</h2>
+                <h2 className="drawer-title">{t.modelPicker.title}</h2>
                 <button
                   type="button"
                   className="ghost-icon-btn"
-                  aria-label="Close model picker"
+                  aria-label={t.modelPicker.closeAria}
                   onClick={onClose}
                 >
                   <X size={20} />
@@ -185,7 +187,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
                       alignItems: 'center',
                     }}
                   >
-                    <span className="drawer-label">Provider</span>
+                    <span className="drawer-label">{t.modelPicker.providerLabel}</span>
                     <button
                       type="button"
                       className="soft-badge"
@@ -195,7 +197,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
                       }}
                     >
                       <KeyRound size={12} />
-                      <span>Manage providers</span>
+                      <span>{t.modelPicker.manageProviders}</span>
                     </button>
                   </div>
 
@@ -235,7 +237,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
                 {/* Add / Select Model ID Input */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <label htmlFor="custom-model-slug" className="drawer-label">
-                    Add or enter Model ID
+                    {t.modelPicker.addOrEnterModelId}
                   </label>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input
@@ -255,7 +257,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
                           handleAddAndUseModel();
                         }
                       }}
-                      placeholder="e.g. deepseek-v4.1 or gpt-5.5"
+                      placeholder={t.modelPicker.modelSlugPlaceholder}
                     />
                     <button
                       type="button"
@@ -264,7 +266,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
                       onClick={handleAddAndUseModel}
                     >
                       {!isAlreadyListed && <Plus size={15} />}
-                      <span>{isAlreadyListed ? 'Use' : 'Add'}</span>
+                      <span>{isAlreadyListed ? t.common.use : t.common.add}</span>
                     </button>
                   </div>
                 </div>
@@ -280,7 +282,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
                       flexWrap: 'wrap',
                     }}
                   >
-                    <span className="drawer-label">Available models</span>
+                    <span className="drawer-label">{t.modelPicker.availableModels}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <button
                         type="button"
@@ -289,7 +291,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
                         onClick={handleFetchFromEndpoint}
                       >
                         <RefreshCw size={12} />
-                        <span>{fetching ? 'Fetching…' : 'Fetch'}</span>
+                        <span>{fetching ? t.common.fetching : t.common.fetch}</span>
                       </button>
                       <button
                         type="button"
@@ -298,7 +300,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
                         onClick={handleSyncModelsDev}
                       >
                         <RefreshCw size={12} />
-                        <span>{syncing ? 'Syncing…' : 'Refresh specs'}</span>
+                        <span>{syncing ? t.modelPicker.syncing : t.modelPicker.refreshSpecs}</span>
                       </button>
                     </div>
                   </div>
@@ -311,7 +313,7 @@ export const ModelPickerSheet: React.FC<ModelPickerSheetProps> = ({
                         color: 'var(--color-muted)',
                       }}
                     >
-                      No models saved yet. Type a Model ID above and click Add, or click Fetch.
+                      {t.modelPicker.noModelsSaved}
                     </p>
                   ) : (
                     modelIds.map((modelId) => {

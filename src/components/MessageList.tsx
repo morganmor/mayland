@@ -35,6 +35,7 @@ import type {
 import { splitMarkdownBlocks } from '../utils/markdownChunks';
 import { formatTimeShort, formatTokenCount } from '../utils/tokenEstimator';
 import { triggerHaptic } from '../utils/nativeBridge';
+import { useI18n } from '../i18n';
 import { AsciiSpinner } from './AsciiSpinner';
 import { Maybot } from './Maybot';
 import { ThoughtsAccordion } from './ThoughtsAccordion';
@@ -62,17 +63,11 @@ interface MessageListProps {
   onFeedback: (msgId: string, vote: 'up' | 'down') => void;
 }
 
-const STARTER_PROMPTS = [
-  'Brainstorm a clean mobile app architecture',
-  'Review my code for subtle edge cases',
-  'Draft a concise technical specification',
-  'Explain this concept step by step',
-];
-
 const CodeFence: React.FC<{
   className?: string;
   children?: React.ReactNode;
 }> = ({ className, children }) => {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const raw = String(children ?? '').replace(/\n$/, '');
   const langMatch = /language-([\w-]+)/.exec(className ?? '');
@@ -112,7 +107,7 @@ const CodeFence: React.FC<{
           }}
         >
           {copied ? <Check size={14} /> : <Copy size={14} />}
-          <span>{copied ? 'Copied' : 'Copy'}</span>
+          <span>{copied ? t.common.copied : t.common.copy}</span>
         </button>
       </div>
       <pre className="code-block-pre">
@@ -198,6 +193,7 @@ const MessageRow = React.memo<MessageRowProps>(
     onOpenVault,
     onFeedback,
   }) => {
+    const { t } = useI18n();
     const setNodeRef = useCallback(
       (el: HTMLElement | null) => {
         onRegisterNode(msg.id, el as HTMLDivElement | null);
@@ -219,7 +215,7 @@ const MessageRow = React.memo<MessageRowProps>(
             }}
           >
             <div className="turn-meta">
-              <span className="turn-role-label">You</span>
+              <span className="turn-role-label">{t.messages.you}</span>
               <span className="tabular-nums">{formatTimeShort(msg.createdAt)}</span>
             </div>
 
@@ -247,7 +243,7 @@ const MessageRow = React.memo<MessageRowProps>(
               <div className="turn-edit-box turn-edit-box--user">
                 <textarea
                   className="turn-edit-textarea"
-                  aria-label="Edit user prompt"
+                  aria-label={t.messages.editUserPromptAria}
                   rows={3}
                   value={editingDraft.draft}
                   onChange={(e) => onUpdateDraft(e.target.value)}
@@ -258,7 +254,7 @@ const MessageRow = React.memo<MessageRowProps>(
                     className="turn-action-btn"
                     onClick={onCancelEdit}
                   >
-                    Cancel
+                    {t.common.cancel}
                   </button>
                   <button
                     type="button"
@@ -270,7 +266,7 @@ const MessageRow = React.memo<MessageRowProps>(
                       onCancelEdit();
                     }}
                   >
-                    Save
+                    {t.common.save}
                   </button>
                 </div>
               </div>
@@ -280,15 +276,15 @@ const MessageRow = React.memo<MessageRowProps>(
 
                 <div
                   className="turn-actions turn-actions--user"
-                  aria-label="User prompt actions"
+                  aria-label={t.messages.userPromptActionsAria}
                 >
                   {msg.content && (
                     <motion.button
                       type="button"
                       className="turn-action-btn turn-action-btn--sm"
                       whileTap={{ scale: 0.92 }}
-                      aria-label="Copy prompt"
-                      title="Copy prompt"
+                      aria-label={t.messages.copyPrompt}
+                      title={t.messages.copyPrompt}
                       onClick={() => onCopy(msg)}
                     >
                       {copied ? (
@@ -296,7 +292,7 @@ const MessageRow = React.memo<MessageRowProps>(
                       ) : (
                         <Copy size={13} />
                       )}
-                      <span>{copied ? 'Copied' : 'Copy'}</span>
+                      <span>{copied ? t.common.copied : t.common.copy}</span>
                     </motion.button>
                   )}
 
@@ -304,15 +300,15 @@ const MessageRow = React.memo<MessageRowProps>(
                     type="button"
                     className="turn-action-btn turn-action-btn--sm"
                     whileTap={{ scale: 0.92 }}
-                    aria-label="Edit prompt"
-                    title="Edit prompt"
+                    aria-label={t.messages.editPrompt}
+                    title={t.messages.editPrompt}
                     onClick={() => {
                       triggerHaptic('light');
                       onStartEdit(msg.id, 'user', msg.content);
                     }}
                   >
                     <Pencil size={13} />
-                    <span>Edit</span>
+                    <span>{t.common.edit}</span>
                   </motion.button>
 
                   <motion.button
@@ -320,15 +316,15 @@ const MessageRow = React.memo<MessageRowProps>(
                     className="turn-action-btn turn-action-btn--sm"
                     data-tone="danger"
                     whileTap={{ scale: 0.92 }}
-                    aria-label="Delete prompt"
-                    title="Delete prompt"
+                    aria-label={t.messages.deletePrompt}
+                    title={t.messages.deletePrompt}
                     onClick={() => {
                       triggerHaptic('medium');
                       onDeleteMessage(msg.id);
                     }}
                   >
                     <Trash2 size={13} />
-                    <span>Delete</span>
+                    <span>{t.common.delete}</span>
                   </motion.button>
                 </div>
               </>
@@ -337,14 +333,14 @@ const MessageRow = React.memo<MessageRowProps>(
         ) : (
           <>
             <div className="turn-meta">
-              <span className="turn-role-label">Model</span>
+              <span className="turn-role-label">{t.messages.model}</span>
               <span>•</span>
               <span className="tabular-nums">{formatTimeShort(msg.createdAt)}</span>
               {msg.metrics && (
                 <>
                   <span>•</span>
                   <span className="tabular-nums">
-                    {formatTokenCount(msg.metrics.totalTokens)} tok
+                    {formatTokenCount(msg.metrics.totalTokens)} {t.composer.tokSuffix}
                     {msg.metrics.tokPerSec ? ` · ${msg.metrics.tokPerSec}/s` : ''}
                   </span>
                 </>
@@ -358,20 +354,20 @@ const MessageRow = React.memo<MessageRowProps>(
             />
 
             {!isStreamingThis && Boolean(msg.thinking?.trim()) && (
-              <div className="turn-actions" aria-label="Reasoning actions">
+              <div className="turn-actions" aria-label={t.messages.reasoningActionsAria}>
                 <motion.button
                   type="button"
                   className="turn-action-btn turn-action-btn--sm"
                   whileTap={{ scale: 0.92 }}
-                  aria-label="Regenerate response from reasoning"
-                  title="Regenerate"
+                  aria-label={t.messages.regenerateReasoningAria}
+                  title={t.messages.regenerate}
                   onClick={() => {
                     triggerHaptic('light');
                     onRetryMessage(msg.id);
                   }}
                 >
                   <RefreshCw size={13} />
-                  <span>Regenerate</span>
+                  <span>{t.messages.regenerate}</span>
                 </motion.button>
 
                 <motion.button
@@ -379,15 +375,15 @@ const MessageRow = React.memo<MessageRowProps>(
                   className="turn-action-btn turn-action-btn--sm"
                   data-tone="danger"
                   whileTap={{ scale: 0.92 }}
-                  aria-label="Delete reasoning"
-                  title="Delete"
+                  aria-label={t.messages.deleteReasoningAria}
+                  title={t.common.delete}
                   onClick={() => {
                     triggerHaptic('medium');
                     onDeleteThinking(msg.id);
                   }}
                 >
                   <Trash2 size={13} />
-                  <span>Delete</span>
+                  <span>{t.common.delete}</span>
                 </motion.button>
               </div>
             )}
@@ -430,7 +426,7 @@ const MessageRow = React.memo<MessageRowProps>(
                     onClick={() => onRetryMessage(msg.id)}
                   >
                     <RefreshCw size={15} />
-                    <span>Retry</span>
+                    <span>{t.common.retry}</span>
                   </button>
                   <button
                     type="button"
@@ -438,7 +434,7 @@ const MessageRow = React.memo<MessageRowProps>(
                     onClick={onOpenVault}
                   >
                     <KeyRound size={15} />
-                    <span>Check API Key / Endpoint</span>
+                    <span>{t.messages.checkApiKeyEndpoint}</span>
                   </button>
                 </div>
               </div>
@@ -446,7 +442,7 @@ const MessageRow = React.memo<MessageRowProps>(
               <div className="turn-edit-box">
                 <textarea
                   className="turn-edit-textarea"
-                  aria-label="Edit model output"
+                  aria-label={t.messages.editModelOutputAria}
                   rows={5}
                   value={editingDraft.draft}
                   onChange={(e) => onUpdateDraft(e.target.value)}
@@ -457,7 +453,7 @@ const MessageRow = React.memo<MessageRowProps>(
                     className="turn-action-btn"
                     onClick={onCancelEdit}
                   >
-                    Cancel
+                    {t.common.cancel}
                   </button>
                   <button
                     type="button"
@@ -467,7 +463,7 @@ const MessageRow = React.memo<MessageRowProps>(
                       onCancelEdit();
                     }}
                   >
-                    Save
+                    {t.common.save}
                   </button>
                 </div>
               </div>
@@ -481,10 +477,10 @@ const MessageRow = React.memo<MessageRowProps>(
                       mode="glow"
                       label={
                         activePhase === 'decrypting'
-                          ? 'Decrypting local key…'
+                          ? t.messages.decryptingKey
                           : activePhase === 'connecting'
-                            ? 'Connecting…'
-                            : 'Preparing response…'
+                            ? t.messages.connecting
+                            : t.messages.preparingResponse
                       }
                     />
                   </span>
@@ -493,14 +489,14 @@ const MessageRow = React.memo<MessageRowProps>(
             )}
 
             {!isStreamingThis && (msg.content || msg.error) && (
-              <div className="turn-actions" aria-label="Model output actions">
+              <div className="turn-actions" aria-label={t.messages.modelOutputActionsAria}>
                 {msg.content && (
                   <motion.button
                     type="button"
                     className="turn-action-btn turn-action-btn--sm"
                     whileTap={{ scale: 0.9 }}
-                    aria-label="Copy response"
-                    title="Copy response"
+                    aria-label={t.messages.copyResponse}
+                    title={t.messages.copyResponse}
                     onClick={() => onCopy(msg)}
                   >
                     {copied ? (
@@ -508,7 +504,7 @@ const MessageRow = React.memo<MessageRowProps>(
                     ) : (
                       <Copy size={13} />
                     )}
-                    <span>{copied ? 'Copied' : 'Copy'}</span>
+                    <span>{copied ? t.common.copied : t.common.copy}</span>
                   </motion.button>
                 )}
 
@@ -517,15 +513,15 @@ const MessageRow = React.memo<MessageRowProps>(
                     type="button"
                     className="turn-action-btn turn-action-btn--sm"
                     whileTap={{ scale: 0.9 }}
-                    aria-label="Edit response"
-                    title="Edit response"
+                    aria-label={t.messages.editResponse}
+                    title={t.messages.editResponse}
                     onClick={() => {
                       triggerHaptic('light');
                       onStartEdit(msg.id, 'output', msg.content);
                     }}
                   >
                     <Pencil size={13} />
-                    <span>Edit</span>
+                    <span>{t.common.edit}</span>
                   </motion.button>
                 )}
 
@@ -533,15 +529,15 @@ const MessageRow = React.memo<MessageRowProps>(
                   type="button"
                   className="turn-action-btn turn-action-btn--sm"
                   whileTap={{ scale: 0.9 }}
-                  aria-label="Regenerate response"
-                  title="Regenerate response"
+                  aria-label={t.messages.regenerateResponse}
+                  title={t.messages.regenerateResponse}
                   onClick={() => {
                     triggerHaptic('light');
                     onRetryMessage(msg.id);
                   }}
                 >
                   <RefreshCw size={13} />
-                  <span>Regenerate</span>
+                  <span>{t.messages.regenerate}</span>
                 </motion.button>
 
                 {msg.content && (
@@ -549,15 +545,15 @@ const MessageRow = React.memo<MessageRowProps>(
                     type="button"
                     className="turn-action-btn turn-action-btn--sm"
                     whileTap={{ scale: 0.9 }}
-                    aria-label="Branch conversation from output"
-                    title="Branch conversation from output"
+                    aria-label={t.messages.branchConversation}
+                    title={t.messages.branchConversation}
                     onClick={() => {
                       triggerHaptic('light');
                       onBranchMessage(msg.id);
                     }}
                   >
                     <GitBranch size={13} />
-                    <span>Branch</span>
+                    <span>{t.messages.branch}</span>
                   </motion.button>
                 )}
 
@@ -566,15 +562,15 @@ const MessageRow = React.memo<MessageRowProps>(
                   className="turn-action-btn turn-action-btn--sm"
                   data-tone="danger"
                   whileTap={{ scale: 0.9 }}
-                  aria-label="Delete response"
-                  title="Delete response"
+                  aria-label={t.messages.deleteResponse}
+                  title={t.messages.deleteResponse}
                   onClick={() => {
                     triggerHaptic('medium');
                     onDeleteMessage(msg.id);
                   }}
                 >
                   <Trash2 size={13} />
-                  <span>Delete</span>
+                  <span>{t.common.delete}</span>
                 </motion.button>
 
                 {msg.content && !msg.error && (
@@ -584,8 +580,8 @@ const MessageRow = React.memo<MessageRowProps>(
                       className="turn-action-btn turn-action-btn--icon"
                       data-active={msg.feedback === 'up' ? 'true' : 'false'}
                       whileTap={{ scale: 0.9 }}
-                      aria-label="Good response"
-                      title="Good response"
+                      aria-label={t.messages.goodResponse}
+                      title={t.messages.goodResponse}
                       onClick={() => {
                         triggerHaptic('light');
                         onFeedback(msg.id, 'up');
@@ -599,8 +595,8 @@ const MessageRow = React.memo<MessageRowProps>(
                       className="turn-action-btn turn-action-btn--icon"
                       data-active={msg.feedback === 'down' ? 'true' : 'false'}
                       whileTap={{ scale: 0.9 }}
-                      aria-label="Bad response"
-                      title="Bad response"
+                      aria-label={t.messages.badResponse}
+                      title={t.messages.badResponse}
                       onClick={() => {
                         triggerHaptic('light');
                         onFeedback(msg.id, 'down');
@@ -638,6 +634,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   onBranchMessage,
   onFeedback,
 }) => {
+  const { t } = useI18n();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const msgRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const scrollRafRef = useRef<number>(0);
@@ -875,7 +872,7 @@ export const MessageList: React.FC<MessageListProps> = ({
           >
             <Maybot mood={activeMood} size="lg" interactive />
 
-            <h1 className="empty-heading">How can I help you today?</h1>
+            <h1 className="empty-heading">{t.emptyState.heading}</h1>
 
             {needsKeySetup ? (
               <div className="starter-pills">
@@ -889,7 +886,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                   }}
                 >
                   <KeyRound size={15} style={{ color: 'var(--color-accent)' }} />
-                  <span>Add API key</span>
+                  <span>{t.emptyState.addApiKey}</span>
                 </motion.button>
                 <motion.button
                   type="button"
@@ -900,12 +897,12 @@ export const MessageList: React.FC<MessageListProps> = ({
                     onOpenSettings();
                   }}
                 >
-                  <span>Run settings</span>
+                  <span>{t.emptyState.runSettings}</span>
                 </motion.button>
               </div>
             ) : (
               <div className="starter-pills">
-                {STARTER_PROMPTS.map((prompt, index) => (
+                {t.emptyState.starters.map((prompt, index) => (
                   <motion.button
                     key={prompt}
                     type="button"
@@ -940,8 +937,10 @@ export const MessageList: React.FC<MessageListProps> = ({
                   handleShowEarlier();
                 }}
               >
-                Show {Math.min(visibleStart, VISIBLE_TURN_WINDOW)} earlier turns ({visibleStart}{' '}
-                hidden)
+                {t.messages.showEarlier(
+                  Math.min(visibleStart, VISIBLE_TURN_WINDOW),
+                  visibleStart
+                )}
               </button>
             )}
 
@@ -987,7 +986,7 @@ export const MessageList: React.FC<MessageListProps> = ({
               }}
             >
               <ShieldCheck size={14} style={{ flexShrink: 0 }} />
-              <span>AI models can make mistakes, so double-check outputs.</span>
+              <span>{t.messages.aiDisclaimer}</span>
             </div>
           </div>
         )}
@@ -1004,7 +1003,7 @@ export const MessageList: React.FC<MessageListProps> = ({
           <motion.button
             type="button"
             className="scroll-bottom-btn"
-            aria-label="Scroll to latest message"
+            aria-label={t.messages.scrollLatestAria}
             initial={{ opacity: 0, y: 10, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.9 }}

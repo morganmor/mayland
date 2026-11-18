@@ -16,6 +16,7 @@ import {
   lookupModelSpec,
 } from '../adapters/modelsDev';
 import { getSearchProviderSpec } from '../adapters/searchProviders';
+import { useI18n } from '../i18n';
 import type {
   ProviderProfile,
   RunSettings,
@@ -95,6 +96,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
   onOpenGetCode,
   onOpenSavedPrompts,
 }) => {
+  const { t } = useI18n();
   const [toolsExpanded, setToolsExpanded] = useState(true);
   const [advancedExpanded, setAdvancedExpanded] = useState(true);
 
@@ -133,12 +135,12 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
         className="drawer-panel"
         data-side="right"
         data-open={open ? 'true' : 'false'}
-        aria-label="Run settings"
+        aria-label={t.runSettings.ariaLabel}
         aria-hidden={!open}
         inert={!open}
       >
             <div className="drawer-header">
-              <h2 className="drawer-title">Run settings</h2>
+              <h2 className="drawer-title">{t.runSettings.title}</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <button
                   type="button"
@@ -156,12 +158,12 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                   }}
                 >
                   <Code2 size={16} />
-                  <span>Get code</span>
+                  <span>{t.runSettings.getCode}</span>
                 </button>
                 <button
                   type="button"
                   className="ghost-icon-btn"
-                  aria-label="Reset parameters to default"
+                  aria-label={t.runSettings.resetDefaultsAria}
                   onClick={() => {
                     triggerHaptic('medium');
                     onResetDefaults();
@@ -172,7 +174,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                 <button
                   type="button"
                   className="ghost-icon-btn"
-                  aria-label="Close Run settings"
+                  aria-label={t.runSettings.closeAria}
                   onClick={onClose}
                 >
                   <X size={20} />
@@ -203,7 +205,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                     {modelSpec?.name ||
                       (settings.model
                         ? settings.model.split('/').pop()
-                        : 'Set default model')}
+                        : t.runSettings.setDefaultModel)}
                   </span>
                   <ChevronRight size={17} style={{ color: 'var(--color-muted)' }} />
                 </div>
@@ -215,7 +217,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                     wordBreak: 'break-all',
                   }}
                 >
-                  {settings.model || 'No model selected'}
+                  {settings.model || t.runSettings.noModelSelected}
                 </span>
                 <div
                   style={{
@@ -248,16 +250,16 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                     flexWrap: 'wrap',
                   }}
                 >
-                  <span className="drawer-label">System instructions</span>
+                  <span className="drawer-label">{t.runSettings.systemInstructions}</span>
                   <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                     {[
                       {
-                        label: 'Concise',
-                        text: 'Respond concisely, clearly, and directly to the point.',
+                        label: t.runSettings.presetConcise,
+                        text: t.runSettings.presetConciseText,
                       },
                       {
-                        label: 'Coding',
-                        text: 'You are a senior software engineer. Write clean, safe code and highlight subtle edge cases.',
+                        label: t.runSettings.presetCoding,
+                        text: t.runSettings.presetCodingText,
                       },
                     ].map((preset) => (
                       <button
@@ -283,7 +285,8 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                     >
                       <Bookmark size={11} />
                       <span>
-                        Saved{savedPromptsCount > 0 ? ` (${savedPromptsCount})` : ''}
+                        {t.runSettings.saved}
+                        {savedPromptsCount > 0 ? ` (${savedPromptsCount})` : ''}
                       </span>
                     </button>
                   </div>
@@ -294,7 +297,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                   name="systemInstructions"
                   rows={5}
                   className="drawer-inline-textarea"
-                  placeholder="Optional tone and style instructions…"
+                  placeholder={t.runSettings.instructionsPlaceholder}
                   value={settings.systemInstructions}
                   onChange={(e) =>
                     onUpdateSettings({ systemInstructions: e.target.value })
@@ -312,7 +315,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: '0.88rem' }}>
                   <KeyRound size={15} style={{ color: 'var(--color-muted)' }} />
-                  <span>API & Providers</span>
+                  <span>{t.runSettings.apiAndProviders}</span>
                 </span>
                 <ChevronRight size={16} style={{ color: 'var(--color-muted)' }} />
               </button>
@@ -323,7 +326,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                 onChange={(thinkingEffort) =>
                   onUpdateSettings({ thinkingEffort })
                 }
-                label="Thinking level"
+                label={t.runSettings.thinkingLevel}
                 active={open}
               />
 
@@ -343,7 +346,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                     fontWeight: 550,
                   }}
                 >
-                  <span>Tools</span>
+                  <span>{t.runSettings.tools}</span>
                   <motion.span
                     animate={{ rotate: toolsExpanded ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
@@ -359,11 +362,11 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                 >
                   <div className="thoughts-inner">
                     <SwitchControl
-                      label="Web Search"
+                      label={t.runSettings.webSearchLabel}
                       hint={
                         hasActiveSearchKey
-                          ? `Search live web via ${activeSearchSpec.name}`
-                          : `Add ${activeSearchSpec.name} key in Settings to activate`
+                          ? t.runSettings.webSearchHintActive(activeSearchSpec.name)
+                          : t.runSettings.webSearchHintSetup(activeSearchSpec.name)
                       }
                       checked={Boolean((settings.webSearchEnabled ?? true) && hasActiveSearchKey)}
                       onChange={(webSearchEnabled) => {
@@ -387,37 +390,37 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                     >
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: '0.84rem' }}>
                         <SearchProviderLogo providerId={activeSearchSpec.id} size={20} />
-                        <span>Search Engine: {activeSearchSpec.name}</span>
+                        <span>{t.runSettings.searchEnginePrefix(activeSearchSpec.name)}</span>
                       </span>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: hasActiveSearchKey ? 'var(--color-success)' : 'var(--color-muted)' }}>
                         <Globe size={12} />
-                        <span>{hasActiveSearchKey ? 'Key saved' : 'Setup'}</span>
+                        <span>{hasActiveSearchKey ? t.runSettings.keySaved : t.runSettings.setup}</span>
                         <ChevronRight size={14} />
                       </span>
                     </button>
                     <SwitchControl
-                      label="Web Fetch"
-                      hint="Allow AI to fetch & read live webpages by URL"
+                      label={t.runSettings.webFetchLabel}
+                      hint={t.runSettings.webFetchHint}
                       checked={settings.webFetchEnabled ?? true}
                       onChange={(webFetchEnabled) =>
                         onUpdateSettings({ webFetchEnabled })
                       }
                     />
                     <SwitchControl
-                      label="Structured outputs"
-                      hint="Force valid JSON response format"
+                      label={t.runSettings.jsonLabel}
+                      hint={t.runSettings.jsonHint}
                       checked={settings.jsonMode}
                       onChange={(jsonMode) => onUpdateSettings({ jsonMode })}
                     />
                     <SwitchControl
-                      label="Auto-follow stream"
-                      hint="Scroll along smoothly as tokens arrive"
+                      label={t.runSettings.autoScrollLabel}
+                      hint={t.runSettings.autoScrollHint}
                       checked={settings.autoScroll ?? true}
                       onChange={(autoScroll) => onUpdateSettings({ autoScroll })}
                     />
                     <SwitchControl
-                      label="Haptic feedback"
-                      hint="Subtle vibration on mobile taps & snaps"
+                      label={t.runSettings.hapticsLabel}
+                      hint={t.runSettings.hapticsHint}
                       checked={settings.hapticsEnabled ?? true}
                       onChange={(hapticsEnabled) =>
                         onUpdateSettings({ hapticsEnabled })
@@ -443,7 +446,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                     fontWeight: 550,
                   }}
                 >
-                  <span>Advanced settings</span>
+                  <span>{t.runSettings.advancedSettings}</span>
                   <motion.span
                     animate={{ rotate: advancedExpanded ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
@@ -471,7 +474,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                           fontSize: '0.85rem',
                         }}
                       >
-                        <span>Temperature</span>
+                        <span>{t.runSettings.temperature}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <button
                             type="button"
@@ -484,7 +487,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                               });
                             }}
                           >
-                            {isTempOff ? 'Off · Provider' : 'Off'}
+                            {isTempOff ? t.runSettings.offProvider : t.runSettings.off}
                           </button>
                           {settings.temperature !== null && (
                             <span
@@ -499,7 +502,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                       {settings.temperature !== null ? (
                         <RigelSlider
                           id="range-temperature"
-                          ariaLabel="Temperature"
+                          ariaLabel={t.runSettings.temperature}
                           min={0}
                           max={2}
                           step={0.05}
@@ -508,7 +511,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                         />
                       ) : (
                         <span style={{ fontSize: '0.74rem', color: 'var(--color-muted)' }}>
-                          Follows provider/model default
+                          {t.runSettings.followsProviderDefault}
                         </span>
                       )}
                     </div>
@@ -523,7 +526,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                           fontSize: '0.85rem',
                         }}
                       >
-                        <span>Top P</span>
+                        <span>{t.runSettings.topP}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <button
                             type="button"
@@ -536,7 +539,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                               });
                             }}
                           >
-                            {isTopPOff ? 'Off · Provider' : 'Off'}
+                            {isTopPOff ? t.runSettings.offProvider : t.runSettings.off}
                           </button>
                           {settings.topP !== null && (
                             <span
@@ -551,7 +554,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                       {settings.topP !== null ? (
                         <RigelSlider
                           id="range-top-p"
-                          ariaLabel="Top P"
+                          ariaLabel={t.runSettings.topP}
                           min={0.05}
                           max={1}
                           step={0.05}
@@ -560,7 +563,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                         />
                       ) : (
                         <span style={{ fontSize: '0.74rem', color: 'var(--color-muted)' }}>
-                          Follows provider/model default
+                          {t.runSettings.followsProviderDefault}
                         </span>
                       )}
                     </div>
@@ -575,7 +578,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                           gap: 8,
                         }}
                       >
-                        <span style={{ fontSize: '0.85rem' }}>Max output tokens</span>
+                        <span style={{ fontSize: '0.85rem' }}>{t.runSettings.maxOutputTokens}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <button
                             type="button"
@@ -589,8 +592,8 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                             }}
                           >
                             {isAutoMax
-                              ? `Off · Auto (${formatCompactTokens(outputCeiling)})`
-                              : 'Off · Auto'}
+                              ? `${t.runSettings.offAuto} (${formatCompactTokens(outputCeiling)})`
+                              : t.runSettings.offAuto}
                           </button>
                           {!isAutoMax && (
                             <span
@@ -611,7 +614,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                         <>
                           <RigelSlider
                             id="range-max-tokens"
-                            ariaLabel="Max output tokens"
+                            ariaLabel={t.runSettings.maxOutputTokens}
                             min={1024}
                             max={outputCeiling}
                             step={sliderStep}
@@ -643,7 +646,7 @@ export const RunSettingsDrawer: React.FC<RunSettingsDrawerProps> = ({
                         </>
                       ) : (
                         <span style={{ fontSize: '0.74rem', color: 'var(--color-muted)' }}>
-                          Follows provider maximum up to model capability
+                          {t.runSettings.followsProviderMax}
                         </span>
                       )}
                     </div>

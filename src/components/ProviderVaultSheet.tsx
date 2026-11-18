@@ -21,6 +21,7 @@ import {
 } from '../adapters/providerPresets';
 import { openAIAdapter } from '../adapters/openaiCompatible';
 import { keyVault } from '../crypto/keyVault';
+import { useI18n } from '../i18n';
 import type {
   EnvelopeMetadata,
   ProviderPresetId,
@@ -47,9 +48,9 @@ type PanelMode = 'edit' | 'add' | 'security';
 
 const ALL_PRESETS = Object.values(PROVIDER_PRESETS);
 
-function extractHost(baseUrl: string): string {
+function extractHost(baseUrl: string, fallbackLabel: string): string {
   const trimmed = baseUrl.trim();
-  if (!trimmed) return 'No URL set';
+  if (!trimmed) return fallbackLabel;
   try {
     return new URL(trimmed).host;
   } catch {
@@ -64,15 +65,6 @@ function getKeyToneColor(
   if (meta) return 'var(--color-success)';
   if (!requiresApiKey) return 'var(--color-thought)';
   return 'var(--color-muted)';
-}
-
-function getKeyStatusText(
-  meta: EnvelopeMetadata | undefined,
-  requiresApiKey: boolean
-): string {
-  if (meta) return 'Key saved';
-  if (!requiresApiKey) return 'Local';
-  return 'No key';
 }
 
 interface ProviderNavItemProps {
@@ -90,9 +82,14 @@ const ProviderNavItem: React.FC<ProviderNavItemProps> = ({
   isActiveChat,
   onSelect,
 }) => {
+  const { t } = useI18n();
   const dotColor = getKeyToneColor(meta, profile.requiresApiKey);
-  const host = extractHost(profile.baseUrl);
-  const statusText = getKeyStatusText(meta, profile.requiresApiKey);
+  const host = extractHost(profile.baseUrl, t.providerVault.noUrlSet);
+  const statusText = meta
+    ? t.providerVault.keySaved
+    : !profile.requiresApiKey
+      ? t.providerVault.local
+      : t.providerVault.noKey;
 
   return (
     <button
@@ -147,7 +144,7 @@ const ProviderNavItem: React.FC<ProviderNavItemProps> = ({
                 textOverflow: 'ellipsis',
               }}
             >
-              {profile.name || 'Untitled'}
+              {profile.name || t.providerVault.untitled}
             </span>
             {isActiveChat && (
               <span
@@ -161,7 +158,7 @@ const ProviderNavItem: React.FC<ProviderNavItemProps> = ({
                   flexShrink: 0,
                 }}
               >
-                Active
+                {t.providerVault.active}
               </span>
             )}
           </div>
@@ -195,6 +192,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
   onRefreshVault,
   onNotify,
 }) => {
+  const { t } = useI18n();
   const [editingId, setEditingId] = useState(activeProfileId);
   const current =
     profiles.find((p) => p.id === editingId) ??
@@ -261,11 +259,11 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
 
   const handleSave = async () => {
     if (!draft.name.trim()) {
-      onNotify('Enter a provider name.', 'error');
+      onNotify(t.providerVault.errEnterName, 'error');
       return;
     }
     if (!draft.baseUrl.trim()) {
-      onNotify('Enter a base URL (e.g. https://api.openai.com/v1).', 'error');
+      onNotify(t.providerVault.errEnterBaseUrl, 'error');
       return;
     }
 
@@ -297,8 +295,8 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
       triggerHaptic('medium');
       onNotify(
         hasNewKey
-          ? `Saved "${updatedProfile.name}" and encrypted API key`
-          : `Saved "${updatedProfile.name}"`
+          ? t.providerVault.savedWithKeyToast(updatedProfile.name)
+          : t.providerVault.savedToast(updatedProfile.name)
       );
     } catch (err) {
       onNotify((err as Error).message, 'error');
@@ -319,7 +317,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
     setNewModelInput('');
     onDeleteProfile(deletedId);
     triggerHaptic('light');
-    onNotify(`Removed "${deletedName}"`);
+    onNotify(t.providerVault.removedToast(deletedName));
   };
 
   const handleAddModel = () => {
@@ -336,7 +334,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
     onSaveProfile(updated);
     setNewModelInput('');
     triggerHaptic('light');
-    onNotify(`Added model "${slug}"`);
+    onNotify(t.providerVault.addedModelToast(slug));
   };
 
   const handleRemoveModel = (modelId: string) => {
@@ -355,14 +353,14 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
 
   const handleFetchModels = async () => {
     if (!draft.baseUrl.trim()) {
-      onNotify('Enter a base URL first.', 'error');
+      onNotify(t.providerVault.errBaseUrlFirst, 'error');
       return;
     }
     setFetchingModels(true);
     try {
       const models = await openAIAdapter.fetchModels(draft, apiKeyInput);
       if (models.length === 0) {
-        onNotify('Endpoint returned 0 models.');
+        onNotify(t.providerVault.zeroModels);
         return;
       }
       const nextDefault = draft.defaultModel.trim() || models[0];
@@ -375,7 +373,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
       setDraft(updated);
       onSaveProfile(updated);
       triggerHaptic('light');
-      onNotify(`Fetched ${models.length} model${models.length === 1 ? '' : 's'}`);
+      onNotify(t.providerVault.fetchedModels(models.length));
     } catch (err) {
       onNotify((err as Error).message, 'error');
     } finally {
@@ -387,7 +385,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
     try {
       const res = await keyVault.runCryptoSelfTest();
       setSelfTestInfo(
-        `${res.passed ? 'PASS' : 'FAIL'} · ${res.algorithm} · ${res.durationMs}ms`
+        `${res.passed ? t.common.pass : t.common.fail} · ${res.algorithm} · ${res.durationMs}ms`
       );
       triggerHaptic('light');
     } catch (err) {
@@ -401,7 +399,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
       setPinDraft('');
       onRefreshVault();
       triggerHaptic('medium');
-      onNotify('Master PIN enabled.');
+      onNotify(t.providerVault.pinEnabledToast);
     } catch (err) {
       onNotify((err as Error).message, 'error');
     }
@@ -413,7 +411,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
       setPinCurrentDraft('');
       onRefreshVault();
       triggerHaptic('medium');
-      onNotify('Master PIN disabled.');
+      onNotify(t.providerVault.pinDisabledToast);
     } catch (err) {
       onNotify((err as Error).message, 'error');
     }
@@ -436,7 +434,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
           <div className="center-modal-wrap">
             <motion.section
               className="center-modal provider-modal"
-              aria-label="API and Providers"
+              aria-label={t.providerVault.ariaLabel}
               initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -445,13 +443,13 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
               {/* Fixed Top Header */}
               <div className="provider-header">
                 <h2 className="drawer-title" style={{ whiteSpace: 'nowrap' }}>
-                  API & Providers
+                  {t.providerVault.title}
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                   <button
                     type="button"
                     className="tonal-pill-btn"
-                    aria-label="Vault PIN security"
+                    aria-label={t.providerVault.pinSecurityAria}
                     style={{
                       minHeight: 34,
                       padding: '0 10px',
@@ -475,7 +473,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                     }}
                   >
                     <Lock size={13} />
-                    <span>{vaultStatus.pinEnabled ? 'PIN On' : 'PIN'}</span>
+                    <span>{vaultStatus.pinEnabled ? t.providerVault.pinOn : t.providerVault.pin}</span>
                   </button>
 
                   <button
@@ -504,13 +502,13 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                     }}
                   >
                     <Plus size={14} />
-                    <span>Add</span>
+                    <span>{t.providerVault.add}</span>
                   </button>
 
                   <button
                     type="button"
                     className="ghost-icon-btn"
-                    aria-label="Close providers"
+                    aria-label={t.providerVault.closeAria}
                     style={{ minWidth: 36, minHeight: 36 }}
                     onClick={onClose}
                   >
@@ -522,7 +520,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
               {/* Modular Workspace: Left Rail (Desktop) / Switcher Bar (Mobile) + Focused Detail Pane */}
               <div className="provider-workspace">
                 {/* Desktop Left Modular Provider Rail */}
-                <aside className="provider-rail" aria-label="Provider list">
+                <aside className="provider-rail" aria-label={t.providerVault.listAria}>
                   <div className="provider-rail-scroll">
                     {profiles.map((p) => (
                       <ProviderNavItem
@@ -580,7 +578,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                             textOverflow: 'ellipsis',
                           }}
                         >
-                          {draft.name || 'Untitled'}
+                          {draft.name || t.providerVault.untitled}
                         </span>
                         <span
                           style={{
@@ -591,8 +589,12 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                             textOverflow: 'ellipsis',
                           }}
                         >
-                          {extractHost(draft.baseUrl)} ·{' '}
-                          {getKeyStatusText(meta, draft.requiresApiKey)}
+                          {extractHost(draft.baseUrl, t.providerVault.noUrlSet)} ·{' '}
+                          {meta
+                            ? t.providerVault.keySaved
+                            : !draft.requiresApiKey
+                              ? t.providerVault.local
+                              : t.providerVault.noKey}
                         </span>
                       </div>
                     </div>
@@ -607,7 +609,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                         flexShrink: 0,
                       }}
                     >
-                      <span>Switch ({profiles.length})</span>
+                      <span>{t.providerVault.switchLabel(profiles.length)}</span>
                       <ChevronDown
                         size={16}
                         strokeWidth={2}
@@ -651,7 +653,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                           <button
                             type="button"
                             className="ghost-icon-btn"
-                            aria-label="Back to provider editor"
+                            aria-label={t.providerVault.backAria}
                             style={{ minWidth: 34, minHeight: 34 }}
                             onClick={() => setPanelMode('edit')}
                           >
@@ -664,7 +666,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                               fontWeight: 560,
                             }}
                           >
-                            Choose a provider
+                            {t.providerVault.chooseProvider}
                           </h3>
                         </div>
                       </div>
@@ -693,9 +695,11 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                               }}
                             >
                               {preset.id === 'custom'
-                                ? 'Any OpenAI-compatible URL'
-                                : `${extractHost(preset.baseUrl)} · ${
-                                    preset.requiresApiKey ? 'API key' : 'No key'
+                                ? t.providerVault.anyOpenAiUrl
+                                : `${extractHost(preset.baseUrl, t.providerVault.noUrlSet)} · ${
+                                    preset.requiresApiKey
+                                      ? t.providerVault.keyRequiredBadge
+                                      : t.providerVault.noKeyBadge
                                   }`}
                             </span>
                           </button>
@@ -716,21 +720,23 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                           <button
                             type="button"
                             className="ghost-icon-btn"
-                            aria-label="Back to provider editor"
+                            aria-label={t.providerVault.backAria}
                             style={{ minWidth: 34, minHeight: 34 }}
                             onClick={() => setPanelMode('edit')}
                           >
                             <ArrowLeft size={17} />
                           </button>
                           <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 560 }}>
-                            Vault PIN Lock
+                            {t.providerVault.vaultPinLock}
                           </h3>
                         </div>
                         <span
                           className="soft-badge"
                           data-tone={vaultStatus.pinEnabled ? 'accent' : undefined}
                         >
-                          {vaultStatus.pinEnabled ? 'PIN Active' : 'Auto Key'}
+                          {vaultStatus.pinEnabled
+                            ? t.providerVault.pinActive
+                            : t.providerVault.autoKey}
                         </span>
                       </div>
 
@@ -742,8 +748,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                           color: 'var(--color-ink-2)',
                         }}
                       >
-                        API keys are encrypted locally using WebCrypto AES-256-GCM. Optionally
-                        add a Master PIN to require unlocking on launch.
+                        {t.providerVault.pinLockDesc}
                       </p>
 
                       {!vaultStatus.pinEnabled ? (
@@ -754,7 +759,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                             style={{ flex: 1, minWidth: 0 }}
                             value={pinDraft}
                             onChange={(e) => setPinDraft(e.target.value)}
-                            placeholder="Set Master PIN (min. 4 chars)…"
+                            placeholder={t.providerVault.setPinPlaceholder}
                           />
                           <button
                             type="button"
@@ -762,7 +767,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                             onClick={handleEnablePin}
                           >
                             <Lock size={14} />
-                            <span>Set PIN</span>
+                            <span>{t.providerVault.setPin}</span>
                           </button>
                         </div>
                       ) : (
@@ -774,7 +779,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                               style={{ flex: 1, minWidth: 160 }}
                               value={pinCurrentDraft}
                               onChange={(e) => setPinCurrentDraft(e.target.value)}
-                              placeholder="Current PIN to disable…"
+                              placeholder={t.providerVault.currentPinPlaceholder}
                             />
                             <button
                               type="button"
@@ -782,7 +787,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                               onClick={handleDisablePin}
                             >
                               <Unlock size={14} />
-                              <span>Disable PIN</span>
+                              <span>{t.providerVault.disablePin}</span>
                             </button>
                           </div>
 
@@ -797,7 +802,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                               }}
                             >
                               <Lock size={14} />
-                              <span>Lock vault now</span>
+                              <span>{t.providerVault.lockVaultNow}</span>
                             </button>
                           </div>
                         </div>
@@ -819,7 +824,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                           className="soft-badge"
                           onClick={handleRunCryptoSelfTest}
                         >
-                          Verify encryption
+                          {t.providerVault.verifyEncryption}
                         </button>
                         {selfTestInfo && (
                           <span
@@ -866,7 +871,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                 textOverflow: 'ellipsis',
                               }}
                             >
-                              {draft.name || 'Untitled Provider'}
+                              {draft.name || t.providerVault.untitledProvider}
                             </h3>
                             <span
                               style={{
@@ -875,7 +880,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                 fontFamily: 'var(--font-mono)',
                               }}
                             >
-                              {extractHost(draft.baseUrl)}
+                              {extractHost(draft.baseUrl, t.providerVault.noUrlSet)}
                             </span>
                           </div>
 
@@ -883,8 +888,8 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                             <button
                               type="button"
                               className="ghost-icon-btn"
-                              aria-label={`Remove ${draft.name}`}
-                              title="Remove provider"
+                              aria-label={t.providerVault.removeProviderAria(draft.name)}
+                              title={t.providerVault.removeProviderTitle}
                               style={{
                                 minWidth: 36,
                                 minHeight: 36,
@@ -901,14 +906,14 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                         <div className="provider-field-grid">
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                             <label htmlFor="vault-profile-name" className="drawer-label">
-                              Name
+                              {t.providerVault.nameLabel}
                             </label>
                             <input
                               id="vault-profile-name"
                               name="profileName"
                               type="text"
                               className="drawer-field"
-                              placeholder="e.g. OpenRouter"
+                              placeholder={t.providerVault.namePlaceholder}
                               value={draft.name}
                               onChange={(e) =>
                                 setDraft({ ...draft, name: e.target.value })
@@ -918,7 +923,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
 
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                             <label htmlFor="vault-base-url" className="drawer-label">
-                              Base URL
+                              {t.providerVault.baseUrlLabel}
                             </label>
                             <input
                               id="vault-base-url"
@@ -945,7 +950,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                             }}
                           >
                             <label htmlFor="vault-api-key" className="drawer-label">
-                              API Key
+                              {t.providerVault.apiKeyLabel}
                             </label>
                             {meta ? (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -956,21 +961,21 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                     fontFamily: 'var(--font-mono)',
                                   }}
                                 >
-                                  Saved ({meta.maskedPreview})
+                                  {t.providerVault.savedPreview(meta.maskedPreview)}
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => {
                                     keyVault.deleteApiKey(draft.id);
                                     onRefreshVault();
-                                    onNotify('API key cleared.');
+                                    onNotify(t.providerVault.apiKeyClearedToast);
                                   }}
                                   style={{
                                     fontSize: '0.74rem',
                                     color: 'var(--color-danger)',
                                   }}
                                 >
-                                  Clear
+                                  {t.providerVault.clear}
                                 </button>
                               </div>
                             ) : (
@@ -985,7 +990,9 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                   })
                                 }
                               >
-                                {draft.requiresApiKey ? 'Key required' : 'Key optional'}
+                                {draft.requiresApiKey
+                                  ? t.providerVault.keyRequiredToggle
+                                  : t.providerVault.keyOptionalToggle}
                               </button>
                             )}
                           </div>
@@ -1000,17 +1007,17 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                               onChange={(e) => setApiKeyInput(e.target.value)}
                               placeholder={
                                 meta
-                                  ? 'Paste new key to replace saved key…'
+                                  ? t.providerVault.pasteReplaceKey
                                   : draft.requiresApiKey
-                                    ? 'Paste API key…'
-                                    : 'Optional for local servers'
+                                    ? t.providerVault.pasteApiKey
+                                    : t.providerVault.optionalLocalKey
                               }
                               style={{ paddingRight: 40 }}
                               autoComplete="off"
                             />
                             <button
                               type="button"
-                              aria-label={showKey ? 'Hide API key' : 'Show API key'}
+                              aria-label={showKey ? t.providerVault.hideKey : t.providerVault.showKey}
                               onClick={() => setShowKey((v) => !v)}
                               style={{
                                 position: 'absolute',
@@ -1028,7 +1035,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <label htmlFor="vault-default-model" className="drawer-label">
-                            Default Model
+                            {t.providerVault.defaultModelLabel}
                           </label>
                           <div style={{ display: 'flex', gap: 8 }}>
                             <input
@@ -1043,7 +1050,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                 fontSize: '0.84rem',
                               }}
                               value={draft.defaultModel}
-                              placeholder="e.g. gpt-5.5 or deepseek-r1"
+                              placeholder={t.providerVault.defaultModelPlaceholder}
                               onChange={(e) =>
                                 setDraft({ ...draft, defaultModel: e.target.value })
                               }
@@ -1060,7 +1067,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                               onClick={handleFetchModels}
                             >
                               <RefreshCw size={14} />
-                              <span>{fetchingModels ? '…' : 'Fetch'}</span>
+                              <span>{fetchingModels ? '…' : t.common.fetch}</span>
                             </button>
                           </div>
 
@@ -1093,7 +1100,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                     </button>
                                     <button
                                       type="button"
-                                      aria-label={`Remove ${modelId}`}
+                                      aria-label={t.providerVault.removeModelAria(modelId)}
                                       onClick={() => handleRemoveModel(modelId)}
                                       style={{
                                         display: 'inline-flex',
@@ -1113,7 +1120,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                         {/* Add Custom Model ID to Saved List */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           <label htmlFor="vault-add-model" className="drawer-label">
-                            Add Model
+                            {t.providerVault.addModelLabel}
                           </label>
                           <div style={{ display: 'flex', gap: 8 }}>
                             <input
@@ -1128,7 +1135,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                 fontSize: '0.84rem',
                               }}
                               value={newModelInput}
-                              placeholder="Type model ID to add…"
+                              placeholder={t.providerVault.addModelPlaceholder}
                               onChange={(e) => setNewModelInput(e.target.value)}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
@@ -1149,7 +1156,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                               onClick={handleAddModel}
                             >
                               <Plus size={14} />
-                              <span>Add</span>
+                              <span>{t.common.add}</span>
                             </button>
                           </div>
                         </div>
@@ -1175,7 +1182,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                               fontWeight: 500,
                             }}
                           >
-                            <span>Paths & custom headers</span>
+                            <span>{t.providerVault.pathsHeadersToggle}</span>
                             <ChevronDown
                               size={16}
                               style={{
@@ -1212,7 +1219,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                     htmlFor="vault-chat-path"
                                     className="drawer-label"
                                   >
-                                    Chat Path
+                                    {t.providerVault.chatPathLabel}
                                   </label>
                                   <input
                                     id="vault-chat-path"
@@ -1240,7 +1247,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                     htmlFor="vault-models-path"
                                     className="drawer-label"
                                   >
-                                    Models Path
+                                    {t.providerVault.modelsPathLabel}
                                   </label>
                                   <input
                                     id="vault-models-path"
@@ -1273,7 +1280,9 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                     justifyContent: 'space-between',
                                   }}
                                 >
-                                  <span className="drawer-label">Custom Headers</span>
+                                  <span className="drawer-label">
+                                    {t.providerVault.customHeadersLabel}
+                                  </span>
                                   <button
                                     type="button"
                                     className="soft-badge"
@@ -1288,7 +1297,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                     }
                                   >
                                     <Plus size={12} />
-                                    <span>Add header</span>
+                                    <span>{t.providerVault.addHeader}</span>
                                   </button>
                                 </div>
                                 {draft.customHeaders.map((pair, idx) => (
@@ -1303,7 +1312,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                     <input
                                       type="text"
                                       className="drawer-field"
-                                      placeholder="Key"
+                                      placeholder={t.providerVault.keyPlaceholder}
                                       value={pair.key}
                                       onChange={(e) => {
                                         const next = [...draft.customHeaders];
@@ -1320,7 +1329,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                     <input
                                       type="text"
                                       className="drawer-field"
-                                      placeholder="Value"
+                                      placeholder={t.providerVault.valuePlaceholder}
                                       value={pair.value}
                                       onChange={(e) => {
                                         const next = [...draft.customHeaders];
@@ -1337,7 +1346,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                                     <button
                                       type="button"
                                       className="ghost-icon-btn"
-                                      aria-label="Remove header"
+                                      aria-label={t.providerVault.removeHeaderAria}
                                       style={{ minWidth: 34, minHeight: 34 }}
                                       onClick={() =>
                                         setDraft({
@@ -1370,7 +1379,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                           }}
                         >
                           <ShieldCheck size={14} style={{ flexShrink: 0 }} />
-                          <span>AES-256-GCM encrypted locally</span>
+                          <span>{t.providerVault.encryptedLocally}</span>
                         </span>
 
                         <button
@@ -1381,7 +1390,7 @@ export const ProviderVaultSheet: React.FC<ProviderVaultSheetProps> = ({
                           onClick={handleSave}
                         >
                           <Check size={16} />
-                          <span>{saving ? 'Saving…' : 'Save'}</span>
+                          <span>{saving ? t.common.saving : t.common.save}</span>
                         </button>
                       </div>
                     </>

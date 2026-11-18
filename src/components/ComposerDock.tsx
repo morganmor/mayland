@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import { getSearchProviderSpec } from '../adapters/searchProviders';
+import { useI18n } from '../i18n';
 import type {
   Attachment,
   RequestPhase,
@@ -55,15 +56,6 @@ interface ComposerDockProps {
   onUserTypingChange: (typing: boolean) => void;
 }
 
-const THINKING_SHORT_LABEL: Record<ThinkingEffort, string> = {
-  off: 'Off',
-  low: 'Low',
-  medium: 'Med',
-  high: 'High',
-  xhigh: 'XHigh',
-  max: 'Max',
-};
-
 export const ComposerDock: React.FC<ComposerDockProps> = ({
   prompt,
   attachments,
@@ -85,6 +77,7 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
   onOpenVault,
   onUserTypingChange,
 }) => {
+  const { language, t } = useI18n();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const anyFileInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
@@ -155,7 +148,7 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rec = new (SpeechRecognition as any)();
-      rec.lang = 'en-US';
+      rec.lang = language === 'id' ? 'id-ID' : 'en-US';
       rec.interimResults = false;
       rec.maxAlternatives = 1;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -224,7 +217,7 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
               />
               <div
                 role="menu"
-                aria-label="Add files, image, or search"
+                aria-label={t.composer.plusMenuAria}
                 className="plus-popover"
               >
                 <button
@@ -239,7 +232,7 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
                 >
                   <span className="plus-popover-item-main">
                     <Paperclip size={16} strokeWidth={1.9} />
-                    <span>Upload Files</span>
+                    <span>{t.composer.uploadFiles}</span>
                   </span>
                 </button>
 
@@ -255,7 +248,7 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
                 >
                   <span className="plus-popover-item-main">
                     <ImagePlus size={16} strokeWidth={1.9} />
-                    <span>Upload Image</span>
+                    <span>{t.composer.uploadImage}</span>
                   </span>
                 </button>
 
@@ -280,7 +273,7 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
                         color: webSearchActive ? 'var(--color-accent)' : 'inherit',
                       }}
                     />
-                    <span>Web Search</span>
+                    <span>{t.composer.webSearch}</span>
                   </span>
                   {webSearchActive && (
                     <Check
@@ -303,13 +296,13 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
               />
               <div
                 role="dialog"
-                aria-label="Reasoning effort"
+                aria-label={t.composer.reasoningDialogAria}
                 className="reasoning-popover"
               >
                 <EffortSlider
                   value={settings.thinkingEffort}
                   onChange={onChangeThinking}
-                  label="Reasoning"
+                  label={t.effort.defaultLabel}
                 />
               </div>
             </>
@@ -352,14 +345,14 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
                     >
                       {att.name}
                       {tokCount > 0
-                        ? ` · ${formatTokenCount(tokCount)} tok`
+                        ? ` · ${formatTokenCount(tokCount)} ${t.composer.tokSuffix}`
                         : att.kind === 'file' && att.size > 0
                           ? ` · ${formatFileSize(att.size)}`
                           : ''}
                     </span>
                     <button
                       type="button"
-                      aria-label={`Remove attachment ${att.name}`}
+                      aria-label={t.composer.removeAttAria(att.name)}
                       onClick={() => onRemoveAttachment(att.id)}
                       style={{
                         display: 'inline-flex',
@@ -382,7 +375,7 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
             rows={1}
             className="composer-textarea"
             value={prompt}
-            placeholder="Start typing a prompt…"
+            placeholder={t.composer.promptPlaceholder}
             onChange={(e) => {
               onPromptChange(e.target.value);
               onUserTypingChange(e.target.value.trim().length > 0);
@@ -420,7 +413,7 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
               <motion.button
                 type="button"
                 className="ghost-icon-btn"
-                aria-label="Add files, image, or search"
+                aria-label={t.composer.plusBtnAria}
                 aria-expanded={plusMenuOpen}
                 aria-haspopup="menu"
                 whileTap={{ scale: 0.88 }}
@@ -439,8 +432,12 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
                 type="button"
                 className="ghost-icon-btn"
                 whileTap={{ scale: 0.9 }}
-                aria-label={`Reasoning effort: ${THINKING_SHORT_LABEL[settings.thinkingEffort]}`}
-                title={`Reasoning: ${THINKING_SHORT_LABEL[settings.thinkingEffort]}`}
+                aria-label={t.composer.reasoningAria(
+                  t.effort.steps[settings.thinkingEffort].short
+                )}
+                title={t.composer.reasoningTitle(
+                  t.effort.steps[settings.thinkingEffort].short
+                )}
                 aria-expanded={reasoningOpen}
                 aria-haspopup="dialog"
                 style={{ color: EFFORT_INDICATOR_COLOR[settings.thinkingEffort] }}
@@ -461,8 +458,8 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
                 <span
                   className="composer-status-indicator"
                   role="img"
-                  aria-label="Structured output (JSON) active"
-                  title="Structured output (JSON) active"
+                  aria-label={t.composer.jsonActiveLabel}
+                  title={t.composer.jsonActiveLabel}
                 >
                   <Braces size={16} strokeWidth={2} />
                 </span>
@@ -472,8 +469,8 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
                 <span
                   className="composer-status-indicator"
                   role="img"
-                  aria-label={`Web search (${searchProviderName}) active`}
-                  title={`Web search (${searchProviderName}) active`}
+                  aria-label={t.composer.webSearchActiveLabel(searchProviderName)}
+                  title={t.composer.webSearchActiveLabel(searchProviderName)}
                 >
                   <Globe size={16} strokeWidth={2} />
                 </span>
@@ -484,7 +481,9 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
               <motion.button
                 type="button"
                 className="ghost-icon-btn"
-                aria-label={dictating ? 'Stop voice dictation' : 'Voice dictation'}
+                aria-label={
+                  dictating ? t.composer.voiceStopAria : t.composer.voiceStartAria
+                }
                 whileTap={{ scale: 0.9 }}
                 animate={
                   dictating
@@ -514,7 +513,7 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
                   }}
                 >
                   <Square size={14} fill="currentColor" />
-                  <span>Stop</span>
+                  <span>{t.composer.stop}</span>
                 </motion.button>
               ) : (
                 <motion.button
@@ -527,7 +526,7 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
                     onSend();
                   }}
                 >
-                  <span>Run</span>
+                  <span>{t.composer.run}</span>
                   <Play size={14} fill="currentColor" />
                 </motion.button>
               )}
@@ -559,10 +558,10 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
             )}
             <span>
               {vaultStatus.pinEnabled && !vaultStatus.unlocked
-                ? 'Vault Locked'
+                ? t.composer.vaultLocked
                 : hasActiveKey
-                  ? 'Encrypted'
-                  : 'Set API Key'}
+                  ? t.composer.encrypted
+                  : t.composer.setApiKey}
             </span>
           </button>
 
@@ -584,7 +583,8 @@ export const ComposerDock: React.FC<ComposerDockProps> = ({
                 whiteSpace: 'nowrap',
               }}
             >
-              {modelShort || 'Set model'} · {THINKING_SHORT_LABEL[settings.thinkingEffort]}
+              {modelShort || t.composer.setModel} ·{' '}
+              {t.effort.steps[settings.thinkingEffort].short}
               {(phase === 'streaming' || phase === 'thinking') && liveTokPerSec !== undefined
                 ? ` · ${liveTokPerSec} tok/s`
                 : ''}

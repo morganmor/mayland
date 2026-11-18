@@ -2,6 +2,7 @@ import { CapacitorHttp } from '@capacitor/core';
 import { createDefaultProfiles } from '../adapters/providerPresets';
 import { keyVault, type VaultSyncSnapshot } from '../crypto/keyVault';
 import type {
+  AppLanguage,
   Conversation,
   ProviderProfile,
   SavedSystemPrompt,
@@ -20,6 +21,7 @@ export interface WorkspaceSyncState {
   conversations: Conversation[];
   activeConvId: string;
   theme: ThemeMode;
+  language?: AppLanguage;
   proseFont: 'editorial' | 'clean';
   savedPrompts?: SavedSystemPrompt[];
   searchEngineConfig?: SearchEngineConfig;
@@ -161,6 +163,7 @@ export function mergeWorkspacesForFirstSync(
     conversations: mergedConvs,
     activeConvId: nonEmptyActive,
     theme: remote.theme !== 'dark' ? remote.theme : local.theme,
+    language: remote.language ?? local.language,
     proseFont: remote.proseFont ?? local.proseFont,
     savedPrompts: Array.from(promptMap.values()).sort(
       (a, b) => b.updatedAt - a.updatedAt
@@ -316,6 +319,7 @@ export async function buildCurrentWorkspaceSnapshot(input: {
   conversations: Conversation[];
   activeConvId: string;
   theme: ThemeMode;
+  language?: AppLanguage;
   proseFont: 'editorial' | 'clean';
   savedPrompts?: SavedSystemPrompt[];
   searchEngineConfig?: SearchEngineConfig;
@@ -328,6 +332,7 @@ export async function buildCurrentWorkspaceSnapshot(input: {
     conversations: input.conversations,
     activeConvId: input.activeConvId,
     theme: input.theme,
+    language: input.language,
     proseFont: input.proseFont,
     savedPrompts: input.savedPrompts ?? [],
     searchEngineConfig: input.searchEngineConfig,

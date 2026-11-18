@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useI18n } from '../i18n';
 import type { ThinkingEffort } from '../types/mayland';
 import { triggerHaptic } from '../utils/nativeBridge';
 import { EFFORT_INDICATOR_COLOR, ReasoningIcon } from './ReasoningIcon';
@@ -13,26 +14,25 @@ interface EffortSliderProps {
 
 const STEPS: Array<{
   id: ThinkingEffort;
-  short: string;
-  label: string;
-  desc: string;
   flareScale: number;
   glowOpacity: number;
 }> = [
-  { id: 'off', short: 'Off', label: 'Off', desc: 'Direct response', flareScale: 0, glowOpacity: 0 },
-  { id: 'low', short: 'Low', label: 'Low', desc: 'Light reasoning', flareScale: 0.55, glowOpacity: 0.16 },
-  { id: 'medium', short: 'Med', label: 'Medium', desc: 'Balanced depth', flareScale: 0.78, glowOpacity: 0.28 },
-  { id: 'high', short: 'High', label: 'High', desc: 'Deep thinking', flareScale: 1, glowOpacity: 0.42 },
-  { id: 'xhigh', short: 'XHigh', label: 'Extra High', desc: 'Deep extended effort', flareScale: 1.24, glowOpacity: 0.62 },
-  { id: 'max', short: 'Max', label: 'Max', desc: 'Rigel peak overdrive', flareScale: 1.42, glowOpacity: 0.78 },
+  { id: 'off', flareScale: 0, glowOpacity: 0 },
+  { id: 'low', flareScale: 0.55, glowOpacity: 0.16 },
+  { id: 'medium', flareScale: 0.78, glowOpacity: 0.28 },
+  { id: 'high', flareScale: 1, glowOpacity: 0.42 },
+  { id: 'xhigh', flareScale: 1.24, glowOpacity: 0.62 },
+  { id: 'max', flareScale: 1.42, glowOpacity: 0.78 },
 ];
 
 export const EffortSlider: React.FC<EffortSliderProps> = ({
   value,
   onChange,
-  label = 'Reasoning',
+  label,
   active = true,
 }) => {
+  const { t } = useI18n();
+  const displayLabel = label ?? t.effort.defaultLabel;
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [trackWidth, setTrackWidth] = useState(260);
   const [dragging, setDragging] = useState(false);
@@ -179,7 +179,7 @@ export const EffortSlider: React.FC<EffortSliderProps> = ({
           >
             <ReasoningIcon size={16} active={!isOff} color={indicatorColor} />
           </motion.span>
-          <span>{label}</span>
+          <span>{displayLabel}</span>
         </span>
 
         <AnimatePresence mode="popLayout" initial={false}>
@@ -192,9 +192,9 @@ export const EffortSlider: React.FC<EffortSliderProps> = ({
             className="soft-badge"
             style={badgeStyle}
           >
-            <span>{activeStep.label}</span>
+            <span>{t.effort.steps[activeStep.id].label}</span>
             <span style={{ opacity: 0.72, fontWeight: 400 }}>
-              · {activeStep.desc}
+              · {t.effort.steps[activeStep.id].desc}
             </span>
           </motion.span>
         </AnimatePresence>
@@ -205,11 +205,11 @@ export const EffortSlider: React.FC<EffortSliderProps> = ({
         ref={trackRef}
         role="slider"
         tabIndex={0}
-        aria-label={label}
+        aria-label={displayLabel}
         aria-valuemin={0}
         aria-valuemax={STEPS.length - 1}
         aria-valuenow={currentIdx}
-        aria-valuetext={`${activeStep.label} — ${activeStep.desc}`}
+        aria-valuetext={`${t.effort.steps[activeStep.id].label} — ${t.effort.steps[activeStep.id].desc}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={endDrag}
@@ -448,7 +448,7 @@ export const EffortSlider: React.FC<EffortSliderProps> = ({
                 transition: 'color 150ms var(--ease-out)',
               }}
             >
-              {step.short}
+              {t.effort.steps[step.id].short}
             </button>
           );
         })}

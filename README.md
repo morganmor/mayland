@@ -24,8 +24,16 @@ Mayland brings OpenAI-compatible multi-provider control, live reasoning traces, 
 - **Local Secret Storage**
   - **LLM Provider Keys**: WebCrypto `AES-256-GCM` encryption with optional PBKDF2-SHA256 Master PIN (`src/crypto/keyVault.ts`).
   - **Search Engine API Keys**: Native `AndroidKeyStore` (`AES/GCM/NoPadding`, 256-bit) plugin stored in app-private `MODE_PRIVATE` `SharedPreferences` on Android (`android/app/src/main/java/app/mayland/chat/MaylandSecureVaultPlugin.java`), with WebCrypto fallback on web/PWA (`src/crypto/searchKeyStore.ts`).
-- **Companion UI & Themes**
-  - Animated chibi companion (`Maybot`), right-edge turn timeline rail, and 5 themes (`dark`, `obsidian`, `space-adventure`, `space-night`, `light`).
+- **Companion UI, Themes & Languages**
+  - Animated chibi companion (`Maybot`), right-edge turn timeline rail, 5 themes (`dark`, `obsidian`, `space-adventure`, `space-night`, `light`), and bilingual UI support (**English** & **Bahasa Indonesia** via Settings).
+
+---
+
+## Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — Detailed system layering, cryptography boundaries, SSE streaming, tool-calling flow, and Android plugin architecture.
+- [DESIGN.md](DESIGN.md) — Visual design system, OKLCH surface hierarchy, and interaction craft.
+- [PRODUCT.md](PRODUCT.md) — Product positioning, UX principles, and mobile constraints.
 
 ---
 
@@ -106,3 +114,10 @@ cd android
 ```
 
 Generated debug APK output: `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+---
+
+## License
+
+Licensed under the [MIT License](LICENSE).
+
