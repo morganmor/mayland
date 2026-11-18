@@ -560,7 +560,7 @@ const ID_TRANSLATIONS: TranslationBundle = {
     themeNames: {
       dark: 'Gelap',
       obsidian: 'Obsidian',
-      'space-adventure': 'Petualangan Antariksa',
+      'space-adventure': 'Antariksa',
       'space-night': 'Malam Tenang',
       light: 'Terang',
     },
